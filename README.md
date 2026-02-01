@@ -32,8 +32,6 @@ Este repositório é um **monorepo** contendo:
 - Persistência com JPA/Hibernate
 - Testes (quando aplicável)
 
-> Obs.: Ajuste os itens acima se você quiser refletir com exatidão o que está no seu projeto hoje.
-
 ---
 
 ## 🗂️ Estrutura do projeto
