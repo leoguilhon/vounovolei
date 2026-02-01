@@ -1,0 +1,2 @@
+ALTER TABLE event_registrations
+ADD COLUMN bring_ball BOOLEAN NOT NULL DEFAULT FALSE;

@@ -1,0 +1,16 @@
+CREATE TABLE events (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  title VARCHAR(120) NOT NULL,
+  event_date_time DATETIME NOT NULL,
+  location VARCHAR(120) NOT NULL,
+  description TEXT NULL,
+
+  created_by_user_id BIGINT NOT NULL,
+
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (id),
+  CONSTRAINT fk_events_created_by_user
+    FOREIGN KEY (created_by_user_id) REFERENCES users(id)
+);

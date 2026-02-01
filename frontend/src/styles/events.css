@@ -1,0 +1,396 @@
+/* src/styles/events.css
+   ─────────────────────────────────────────
+   Página de listagem de eventos
+   Grid centraliza corretamente com 1–2 cards
+   ───────────────────────────────────────── */
+
+/* ====== Pagina ====== */
+.events-page {
+  min-height: 100vh;
+  padding: 0 0 40px 0;
+  background: var(--color-bg-subtle);
+}
+
+/* ====== Main ====== */
+.events-main {
+  max-width: 1080px;
+  margin: 24px auto 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+.events-hint {
+  max-width: 1080px;
+  margin: 20px auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  font-size: 0.9375rem;
+}
+
+/* ====== Grid da listagem ======
+   Ideia: colunas com "largura do card" e o conjunto centralizado.
+   - auto-fit cria quantas colunas couberem
+   - minmax(320px, 500px) mantém comportamento em colunas
+   - justify-content: center centraliza o conjunto quando sobram espaços */
+.events-grid {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 500px));
+  justify-content: center;
+  gap: 20px;
+}
+
+.events-grid .event-card {
+  width: 100%;
+}
+
+/* ====== Cards ====== */
+.event-card {
+  display: block;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+  text-decoration: none;
+  color: inherit;
+}
+
+.event-card * {
+  text-decoration: none;
+}
+
+.event-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-text-muted);
+}
+
+.event-card-media {
+  position: relative;
+  height: 160px;
+  background: var(--color-bg-subtle);
+}
+
+.event-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Badges do card */
+.event-card-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.event-card-badge-left {
+  left: 12px;
+  right: unset;
+}
+
+.event-card-body {
+  padding: 16px;
+}
+
+.event-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.event-card-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-secondary);
+  margin-top: 8px;
+  line-height: 1.3;
+  font-size: 0.875rem;
+}
+
+.event-card-icon {
+  width: 18px;
+  display: inline-flex;
+  justify-content: center;
+  color: var(--color-text-muted);
+}
+
+.event-card-text {
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.event-card-sep {
+  margin: 0 2px;
+  color: var(--color-text-muted);
+}
+
+/* ====== Responsivo ====== */
+@media (max-width: 820px) {
+  .events-main,
+  .events-hint,
+  .events-grid {
+    padding: 0 16px;
+  }
+
+  .events-page {
+    padding-bottom: 32px;
+  }
+
+  .events-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .event-card-media {
+    height: 140px;
+  }
+}
+
+.event-card--past {
+  filter: grayscale(100%);
+  opacity: 0.7;
+}
+
+.event-card--past:hover {
+  filter: grayscale(100%);
+  opacity: 0.7;
+  transform: none; /* evita efeito de hover/lift */
+}
+
+.event-card.event-card--past::after {
+  content: "Encerrado";
+  position: absolute;
+  right: 12px !important;
+  bottom: 12px !important;
+
+  /* mata qualquer top/left antigo */
+  top: auto !important;
+  left: auto !important;
+
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  z-index: 999;
+  pointer-events: none;
+}
+
+.pagination {
+  margin-top: 18px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination-btn {
+  border: 1px solid rgba(0,0,0,0.12);
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+/* ===== Floating Action Button (+) ===== */
+.fab {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+
+  display: grid;
+  place-items: center; /* centraliza perfeito */
+
+  font-size: 28px;     /* ajuste se quiser */
+  line-height: 1;      /* evita o + “cair” */
+  font-weight: 800;
+
+  /* se você usa position fixed */
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+}
+
+.fab > span {
+  display: block;
+  line-height: 1;
+  transform: translateY(-1px); /* opcional: micro-ajuste */
+}
+
+.fab:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-text-muted);
+}
+
+.fab:active {
+  transform: translateY(0);
+}
+
+/* ===== Modal (igual padrão do sorteio) ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 60;
+}
+
+.modal {
+  width: min(720px, 100%);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.modal-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.modal-close {
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+}
+
+.modal-close:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.modal-body {
+  padding: 16px;
+}
+
+.form-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.form-field label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--color-text);
+  margin-bottom: 6px;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font: inherit;
+  outline: none;
+}
+
+.textarea {
+  resize: vertical;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: var(--color-text-muted);
+}
+
+/* Reusa seus botões existentes (primary-button/secondary-button) */
+.modal-actions-bottom {
+  margin-top: 14px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+@media (max-width: 520px) {
+  .fab {
+    right: 16px;
+    bottom: 16px;
+  }
+
+  .modal-actions-bottom {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.badge-mine {
+  font-size: 10px !important;
+  padding: 2px 6px !important;
+  line-height: 1 !important;
+  margin-left: auto; /* <<< cola no lado direito */
+}
+
+/* 8+ inscritos: mantém o background original, só dá destaque */
+.event-card-badge--ready {
+  border: 1px solid rgba(16, 185, 129, 0.55);
+  color: rgb(6, 95, 70);
+
+  box-shadow:
+    0 0 0 2px rgba(16, 185, 129, 0.12),
+    0 0 14px rgba(16, 185, 129, 0.55);
+
+  filter: saturate(1.15);
+}
+
+@keyframes readyPulse {
+  0%   { box-shadow: 0 0 0 2px rgba(16,185,129,0.10), 0 0 10px rgba(16,185,129,0.35); }
+  50%  { box-shadow: 0 0 0 2px rgba(16,185,129,0.18), 0 0 18px rgba(16,185,129,0.65); }
+  100% { box-shadow: 0 0 0 2px rgba(16,185,129,0.10), 0 0 10px rgba(16,185,129,0.35); }
+}
+
+.event-card-badge--ready {
+  animation: readyPulse 1.6s ease-in-out infinite;
+}
