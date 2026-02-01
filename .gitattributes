@@ -1,0 +1,12 @@
+# Linguist: ajuste de linguagem no monorepo
+
+# Conte o backend como Java
+backend/** linguist-language=Java
+
+# Não considere build/dist coverage etc.
+frontend/dist/** linguist-generated=true
+frontend/build/** linguist-generated=true
+frontend/coverage/** linguist-generated=true
+
+# Se quiser reduzir o peso do frontend na contagem (opcional):
+frontend/** linguist-vendored=true
