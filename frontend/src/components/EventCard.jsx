@@ -60,26 +60,19 @@ export default function EventCard({ event }) {
       </div>
 
       <div className="event-card-body">
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <div className="event-card-title-row">
           <div className="event-card-title">{title}</div>
 
-          {event.isOwner && (
-            <span
-              className="pill badge-mine"
-              style={{
-                background: "rgba(16, 185, 129, 0.14)",
-                border: "1px solid rgba(16, 185, 129, 0.35)",
-                color: "rgb(6, 95, 70)",
-                fontWeight: 700,
-                fontSize: 12,
-                padding: "4px 8px",
-                borderRadius: 999,
-              }}
-              title="Este evento foi criado por você"
-            >
-              Criado por você
-            </span>
-          )}
+          <div className="event-card-title-badges">
+            {event.isOwner && (
+              <span
+                className="badge-pill badge-mine"
+                title="Este evento foi criado por você"
+              >
+                Criado por você
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="event-card-row">
@@ -87,12 +80,23 @@ export default function EventCard({ event }) {
           <span className="event-card-text">{location}</span>
         </div>
 
-        <div className="event-card-row">
-          <span className="event-card-icon">📅</span>
-          <span className="event-card-text">{date}</span>
-          <span className="event-card-sep">•</span>
-          <span className="event-card-icon">⏰</span>
-          <span className="event-card-text">{time}</span>
+        <div className="event-card-row event-card-row--meta">
+          <div className="event-card-meta-left">
+            <span className="event-card-icon">📅</span>
+            <span className="event-card-text">{date}</span>
+            <span className="event-card-sep">•</span>
+            <span className="event-card-icon">⏰</span>
+            <span className="event-card-text">{time}</span>
+          </div>
+
+          {event.isRegistered && (
+            <span
+              className="badge-pill badge-registered"
+              title="Você está inscrito neste evento"
+            >
+              Inscrito
+            </span>
+          )}
         </div>
       </div>
     </Link>

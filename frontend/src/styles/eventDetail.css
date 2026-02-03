@@ -43,11 +43,11 @@
 /* ─── Card Principal ─── */
 .detail-card {
   max-width: 1040px;
-  margin: 0 auto;
+  margin: 12px auto;
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow: visible;
   box-shadow: var(--shadow-sm);
 }
 
@@ -55,6 +55,9 @@
   position: relative;
   height: 210px;
   background: var(--color-bg-subtle);
+  overflow: hidden;
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
 }
 
 .detail-hero-img {
@@ -81,6 +84,8 @@
 .detail-hero-badge-left {
   left: 16px;
   right: unset;
+  top: 16px;
+  bottom: unset;
 }
 
 .detail-content {
@@ -96,11 +101,26 @@
 }
 
 /* ─── Pills/Meta ─── */
-.detail-meta {
+.detail-meta-row {
   margin-top: 16px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.detail-meta {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.detail-meta-badges {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
 }
 
 .pill {
@@ -118,6 +138,24 @@
 .pill-sand {
   background: var(--color-bg-subtle);
   color: var(--color-text);
+}
+
+.badge-mine {
+  background: var(--color-bg);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.badge-registered {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: rgb(6, 95, 70);
+  font-weight: 700;
+}
+
+.badge-mine-title {
+  margin-left: auto;
 }
 
 /* ─── Sections ─── */
@@ -148,10 +186,25 @@
 
 /* ─── Actions ─── */
 .detail-actions {
-  margin-top: 20px;
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+  justify-content: flex-end;
+  position: relative;
+}
+
+.detail-actions-row {
+  margin-top: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.detail-actions-left {
+  display: flex;
+  align-items: center;
 }
 
 /* quando está "Remover inscrição" */
@@ -204,6 +257,94 @@
 .secondary-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* === Ações (dropdown) === */
+.actions-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  transition: all var(--transition-fast);
+}
+
+.actions-trigger:hover {
+  background: var(--color-bg-subtle);
+  border-color: var(--color-text-muted);
+}
+
+.actions-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.actions-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.actions-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 220px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: 6px;
+  z-index: 10;
+}
+
+.actions-item {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.actions-item:hover {
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border-light);
+}
+
+.actions-item.danger:hover {
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.18);
+}
+
+.actions-item.success:hover {
+  background: rgba(22, 163, 74, 0.1);
+  border-color: rgba(22, 163, 74, 0.2);
+}
+
+.actions-item:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.actions-item.danger {
+  color: var(--color-danger);
+}
+
+.actions-item.success {
+  color: var(--color-success);
 }
 
 /* ─── Error Box ─── */

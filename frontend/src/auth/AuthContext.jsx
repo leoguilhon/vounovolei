@@ -16,22 +16,11 @@ export function AuthProvider({ children }) {
   async function login({ email, password }) {
     const { data } = await http.post("/auth/login", { email, password });
 
-    const token =
-        data?.token ||
-        data?.accessToken ||
-        data?.jwt ||
-        data?.access_token;
+    const token = data?.token || data?.accessToken || data?.jwt || data?.access_token;
+    if (!token) throw new Error("TOKEN_NAO_RETORNADO");
 
-    if (!token) {
-        console.log("Resposta do /auth/login:", data);
-        throw new Error("TOKEN_NAO_RETORNADO");
-    }
-
-    // grava imediatamente (sincrono), além do state
-    localStorage.setItem("token", token);
+    localStorage.setItem("token", token); // grava já
     setToken(token);
-
-    setUser(data.user ?? { email });
 
     return token;
   }

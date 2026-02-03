@@ -145,6 +145,8 @@ export default function EventDetail() {
   // ===== TOPBAR =====
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const actionsRef = useRef(null);
   const [me, setMe] = useState(null);
 
   function capitalizeFirst(text) {
@@ -209,6 +211,25 @@ export default function EventDetail() {
       document.removeEventListener("keydown", onEsc);
     };
   }, [menuOpen]);
+
+  useEffect(() => {
+    function onDocClick(e) {
+      if (!actionsOpen) return;
+      if (!actionsRef.current) return;
+      if (!actionsRef.current.contains(e.target)) setActionsOpen(false);
+    }
+
+    function onEsc(e) {
+      if (e.key === "Escape") setActionsOpen(false);
+    }
+
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onEsc);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onEsc);
+    };
+  }, [actionsOpen]);
 
   // ===== Modal sorteio =====
   const [isDrawOpen, setIsDrawOpen] = useState(false);
@@ -662,10 +683,6 @@ async function confirmDelete() {
           </div>
         </header>
 
-        <div className="detail-top">
-          <div className="skeleton skeleton-back" />
-        </div>
-
         <div className="detail-card">
           <div className="detail-hero">
             <div className="detail-hero-img skeleton" />
@@ -687,9 +704,15 @@ async function confirmDelete() {
               <div className="skeleton skeleton-text" />
             </div>
 
-            <div className="detail-actions">
-              <div className="skeleton skeleton-btn" />
-              <div className="skeleton skeleton-btn" />
+            <div className="detail-actions-row">
+              <div className="detail-actions-left">
+                <div className="skeleton skeleton-back" />
+              </div>
+
+              <div className="detail-actions">
+                <div className="skeleton skeleton-btn" />
+                <div className="skeleton skeleton-btn" />
+              </div>
             </div>
 
             <div className="detail-section">
@@ -827,12 +850,6 @@ async function confirmDelete() {
         </div>
       </header>
 
-      <div className="detail-top">
-        <Link className="back-link" to="/events">
-          Voltar
-        </Link>
-      </div>
-
       <div className="detail-card">
         <div className="detail-hero">
           <img
@@ -877,13 +894,7 @@ async function confirmDelete() {
 
             {isOwner && (
               <span
-                className="pill badge-mine"
-                style={{
-                  background: "rgba(16, 185, 129, 0.14)",
-                  borderColor: "rgba(16, 185, 129, 0.35)",
-                  color: "rgb(6, 95, 70)",
-                  fontWeight: 700,
-                }}
+                className="pill badge-mine badge-mine-title"
                 title="Este evento foi criado por você"
               >
                 Criado por você
@@ -891,10 +902,23 @@ async function confirmDelete() {
             )}
           </div>
 
-          <div className="detail-meta">
-            <span className="pill">{date}</span>
-            <span className="pill">{time}</span>
-            <span className="pill pill-sand">{location}</span>
+          <div className="detail-meta-row">
+            <div className="detail-meta">
+              <span className="pill">{date}</span>
+              <span className="pill">{time}</span>
+              <span className="pill pill-sand">{location}</span>
+            </div>
+
+            <div className="detail-meta-badges">
+              {isRegistered && (
+                <span
+                  className="pill badge-registered"
+                  title="Você está inscrito neste evento"
+                >
+                  Inscrito
+                </span>
+              )}
+            </div>
           </div>
 
           {description && (
@@ -904,54 +928,98 @@ async function confirmDelete() {
             </div>
           )}
 
-          <div className="detail-actions">
+          <div className="detail-actions-row">
+            <div className="detail-actions-left">
+              <Link className="back-link" to="/events">
+                Voltar
+              </Link>
+            </div>
+
+            <div className="detail-actions" ref={actionsRef}>
             <button
-              className={`primary-button ${
-                isRegistered ? "primary-button-alt" : ""
-              }`}
-              onClick={toggleRegistration}
-              disabled={busy}
+              className="actions-trigger"
+              onClick={() => setActionsOpen((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={actionsOpen}
+              title="Ações do evento"
             >
-              {busy ? "..." : isRegistered ? "Remover inscrição" : "Inscrever-se"}
+              <span className="actions-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.4 7.4 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.58.23-1.12.54-1.62.94l-2.39-.96a.5.5 0 0 0-.6.22L2.66 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.5.4 1.04.71 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.58-.23 1.12-.54 1.62-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" />
+                </svg>
+              </span>
+              <span className="actions-label">Ações</span>
             </button>
 
-            <button
-              className="secondary-button"
-              onClick={openDraw}
-              disabled={participants.length < 2}
-              title={
-                participants.length < 2
-                  ? "Inscreva pelo menos 2 pessoas"
-                  : "Sortear times"
-              }
-            >
-              Sortear times
-            </button>
+            {actionsOpen && (
+              <div className="actions-dropdown" role="menu">
+                <button
+                  className={`actions-item ${
+                    isRegistered ? "danger" : "success"
+                  }`}
+                  onClick={() => {
+                    setActionsOpen(false);
+                    toggleRegistration();
+                  }}
+                  disabled={busy}
+                  role="menuitem"
+                >
+                  {busy
+                    ? "..."
+                    : isRegistered
+                    ? "Remover inscrição"
+                    : "Inscrever-se"}
+                </button>
 
-            {canEdit && (
-              <button
-                className="secondary-button"
-                onClick={openEdit}
-                disabled={busy}
-                title="Editar evento"
-              >
-                Editar evento
-              </button>
+                <button
+                  className="actions-item"
+                  onClick={() => {
+                    setActionsOpen(false);
+                    openDraw();
+                  }}
+                  disabled={participants.length < 2}
+                  title={
+                    participants.length < 2
+                      ? "Inscreva pelo menos 2 pessoas"
+                      : "Sortear times"
+                  }
+                  role="menuitem"
+                >
+                  Sortear times
+                </button>
+
+                {canEdit && (
+                  <button
+                    className="actions-item"
+                    onClick={() => {
+                      setActionsOpen(false);
+                      openEdit();
+                    }}
+                    disabled={busy}
+                    title="Editar evento"
+                    role="menuitem"
+                  >
+                    Editar evento
+                  </button>
+                )}
+
+                {canEdit && (
+                  <button
+                    className="actions-item danger"
+                    onClick={() => {
+                      setActionsOpen(false);
+                      openDelete();
+                    }}
+                    disabled={busy}
+                    title="Excluir evento"
+                    role="menuitem"
+                  >
+                    Excluir evento
+                  </button>
+                )}
+              </div>
             )}
-            {canEdit && (
-              <button
-                className="secondary-button"
-                onClick={openDelete}
-                disabled={busy}
-                title="Excluir evento"
-                style={{
-                  borderColor: "rgba(239, 68, 68, 0.45)",
-                  color: "rgb(185, 28, 28)",
-                }}
-              >
-                Excluir evento
-              </button>
-            )}
+            </div>
           </div>
 
           {error && <div className="error-box">{error}</div>}

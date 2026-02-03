@@ -306,9 +306,17 @@ export default function Events() {
           ? Number(meUserId) === Number(createdBy)
           : false;
 
+      const participants = Array.isArray(detail?.participants)
+        ? detail.participants
+        : [];
+      const isRegistered =
+        meUserId != null &&
+        participants.some((p) => Number(p.id) === Number(meUserId));
+
       return {
         ...e,
         participantsCount: detail?.participantsCount,
+        isRegistered,
         isPast,
         isOwner,
         _key: key ?? "9999-12-31T23:59:59",

@@ -117,6 +117,44 @@
   line-height: 1.4;
 }
 
+.event-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.event-card-title-badges {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.badge-pill {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  line-height: 1;
+}
+
+.badge-mine,
+.badge-registered {
+  /* mesmo estilo base do badge-pill */
+}
+
+.badge-registered {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: rgb(6, 95, 70);
+  font-weight: 700;
+}
+
 .event-card-row {
   display: flex;
   align-items: center;
@@ -125,6 +163,18 @@
   margin-top: 8px;
   line-height: 1.3;
   font-size: 0.875rem;
+}
+
+.event-card-row--meta {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.event-card-meta-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .event-card-icon {
@@ -180,18 +230,15 @@
 .event-card.event-card--past::after {
   content: "Encerrado";
   position: absolute;
-  right: 12px !important;
-  bottom: 12px !important;
-
-  /* mata qualquer top/left antigo */
-  top: auto !important;
-  left: auto !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%);
 
   background: rgba(0, 0, 0, 0.65);
   color: #fff;
   font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
   z-index: 999;
   pointer-events: none;
 }
@@ -366,12 +413,6 @@
   }
 }
 
-.badge-mine {
-  font-size: 10px !important;
-  padding: 2px 6px !important;
-  line-height: 1 !important;
-  margin-left: auto; /* <<< cola no lado direito */
-}
 
 /* 8+ inscritos: mantém o background original, só dá destaque */
 .event-card-badge--ready {
