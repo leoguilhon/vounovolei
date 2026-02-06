@@ -37,6 +37,9 @@ public class AuthService {
                 .password(passwordEncoder.encode(req.password()))
                 .role(UserRole.USER)
                 .createdAt(Instant.now())
+                // ✅ default: sem foto (front mostra iniciais)
+                .avatarUrl(null)
+                .avatarUpdatedAt(null)
                 .build();
 
         userRepository.save(user);
@@ -79,7 +82,9 @@ public class AuthService {
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
-                user.getRole().name()
+                user.getRole().name(),
+                // ✅ adiciona avatarUrl na resposta do /me
+                user.getAvatarUrl()
         );
     }
 
@@ -101,7 +106,14 @@ public class AuthService {
             user.setEmail(email);
         }
 
-        return new MeResponse(user.getId(), user.getName(), user.getEmail(), user.getRole().name());
+        return new MeResponse(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getRole().name(),
+                // ✅ mantém avatarUrl no updateMe também
+                user.getAvatarUrl()
+        );
     }
 
     @Transactional
@@ -118,7 +130,6 @@ public class AuthService {
 
         var user = getLoggedUser();
 
-        // AJUSTE AQUI se o campo na entidade não for getPassword()
         var matches = passwordEncoder.matches(req.currentPassword(), user.getPassword());
         if (!matches) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Senha atual incorreta");

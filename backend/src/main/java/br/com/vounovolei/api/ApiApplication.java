@@ -2,7 +2,10 @@ package br.com.vounovolei.api;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import br.com.vounovolei.api.config.UploadProperties;
 
+@EnableConfigurationProperties(UploadProperties.class)
 @SpringBootApplication
 public class ApiApplication {
 

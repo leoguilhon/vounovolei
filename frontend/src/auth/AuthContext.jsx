@@ -1,4 +1,11 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import http from "../api/http";
 
 const AuthContext = createContext(null);
@@ -16,10 +23,11 @@ export function AuthProvider({ children }) {
   async function login({ email, password }) {
     const { data } = await http.post("/auth/login", { email, password });
 
-    const token = data?.token || data?.accessToken || data?.jwt || data?.access_token;
+    const token =
+      data?.token || data?.accessToken || data?.jwt || data?.access_token;
     if (!token) throw new Error("TOKEN_NAO_RETORNADO");
 
-    localStorage.setItem("token", token); // grava já
+    localStorage.setItem("token", token); // grava ja
     setToken(token);
 
     return token;
@@ -27,18 +35,38 @@ export function AuthProvider({ children }) {
 
   async function register({ name, email, password }) {
     await http.post("/auth/register", { name, email, password });
-    // após cadastrar, já loga automaticamente
+    // apos cadastrar, ja loga automaticamente
     await login({ email, password });
   }
 
-  function logout() {
+  const refreshMe = useCallback(async () => {
+    if (!token) {
+      setUser(null);
+      return null;
+    }
+
+    const { data } = await http.get("/auth/me");
+    setUser(data);
+    return data;
+  }, [token]);
+
+  const logout = useCallback(() => {
     setToken(null);
     setUser(null);
-  }
+  }, []);
 
   const value = useMemo(
-    () => ({ token, user, isAuthenticated, login, register, logout }),
-    [token, user, isAuthenticated]
+    () => ({
+      token,
+      user,
+      setUser,
+      isAuthenticated,
+      login,
+      register,
+      refreshMe,
+      logout,
+    }),
+    [token, user, isAuthenticated, refreshMe, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

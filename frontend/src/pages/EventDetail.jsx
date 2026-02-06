@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import http from "../api/http";
 import { useAuth } from "../auth/AuthContext";
+import Avatar from "../components/Avatar";
 import "../styles/topbar.css";
 import "../styles/eventDetail.css";
 
@@ -184,14 +185,9 @@ export default function EventDetail() {
     return rawName ? capitalizeFirst(rawName) : "";
   }, [rawName]);
 
-  const initials = useMemo(() => {
-    const name = String(displayName).trim();
-    if (!name) return "U";
-
-    const parts = name.split(" ").filter(Boolean);
-    if (parts.length === 1) return parts[0][0]?.toUpperCase() ?? "U";
-    return (parts[0][0] + parts[1][0]).toUpperCase();
-  }, [displayName]);
+  const avatarName = useMemo(() => (user ? user.name : me?.name) || "", [user, me]);
+  const avatarEmail = useMemo(() => (user ? user.email : me?.email) || "", [user, me]);
+  const avatarUrl = useMemo(() => (user ? user.avatarUrl : me?.avatarUrl) ?? null, [user, me]);
 
   useEffect(() => {
     function onDocClick(e) {
@@ -649,7 +645,12 @@ async function confirmDelete() {
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
               >
-                <span className="profile-avatar">{initials}</span>
+                <Avatar
+                  className="profile-avatar"
+                  name={avatarName}
+                  email={avatarEmail}
+                  avatarUrl={avatarUrl}
+                />
                 {displayName ? (
                   <span className="profile-label">{displayName}</span>
                 ) : null}
@@ -749,7 +750,12 @@ async function confirmDelete() {
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
               >
-                <span className="profile-avatar">{initials}</span>
+                <Avatar
+                  className="profile-avatar"
+                  name={avatarName}
+                  email={avatarEmail}
+                  avatarUrl={avatarUrl}
+                />
                 {displayName ? (
                   <span className="profile-label">{displayName}</span>
                 ) : null}
@@ -814,7 +820,12 @@ async function confirmDelete() {
               aria-haspopup="menu"
               aria-expanded={menuOpen}
             >
-              <span className="profile-avatar">{initials}</span>
+              <Avatar
+                className="profile-avatar"
+                name={avatarName}
+                email={avatarEmail}
+                avatarUrl={avatarUrl}
+              />
 
               {displayName ? (
                 <span className="profile-label">{displayName}</span>

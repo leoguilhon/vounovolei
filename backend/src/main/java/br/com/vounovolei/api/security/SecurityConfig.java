@@ -17,7 +17,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
-
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -38,6 +37,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // libera preflight
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // ✅ libera imagens de avatar publicamente (para o <img src="..."> do front)
+                        .requestMatchers(HttpMethod.GET, "/media/**").permitAll()
 
                         .requestMatchers("/auth/register", "/auth/login").permitAll()
                         .anyRequest().authenticated()

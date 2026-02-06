@@ -99,7 +99,40 @@
   margin-top: 20px;
 }
 
-/* ─── Responsivo ─── */
+/* Avatar Section */
+.avatar-card .section-hint {
+  margin-bottom: 16px;
+}
+
+.avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.avatar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.avatar-file {
+  display: none;
+}
+
+.btn-danger {
+  background: var(--color-danger);
+  color: #ffffff;
+  border-color: var(--color-danger);
+}
+
+.btn-danger:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+}
+
+/* Responsivo */
 @media (max-width: 600px) {
   .page.edit-profile .container {
     padding: 20px 16px 32px 16px;
@@ -117,3 +150,6 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+

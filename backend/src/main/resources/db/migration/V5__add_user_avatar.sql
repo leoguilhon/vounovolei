@@ -1,0 +1,3 @@
+ALTER TABLE users
+  ADD COLUMN avatar_url VARCHAR(512) NULL,
+  ADD COLUMN avatar_updated_at DATETIME NULL;
