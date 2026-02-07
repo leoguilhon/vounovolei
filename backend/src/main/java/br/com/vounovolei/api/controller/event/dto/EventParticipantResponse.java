@@ -4,5 +4,6 @@ public record EventParticipantResponse(
         Long id,
         String name,
         String email,
+        String avatarUrl,
         Boolean bringBall
 ) {}

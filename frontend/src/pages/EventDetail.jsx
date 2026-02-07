@@ -233,6 +233,9 @@ export default function EventDetail() {
   const [teamsCount, setTeamsCount] = useState(2);
   const [selectedIds, setSelectedIds] = useState({});
   const [teams, setTeams] = useState([]);
+  const [drawnPlayer, setDrawnPlayer] = useState(null);
+  const [drawNotice, setDrawNotice] = useState(false);
+  const drawNoticeTimerRef = useRef(null);
 
   const tokenRef = useRef(localStorage.getItem("token") || "");
   const jwtSub = useMemo(() => getJwtSub(tokenRef.current), []);
@@ -575,7 +578,8 @@ async function confirmDelete() {
       setSelectedIds(sanitizedSelected);
       setDrawMode(restoredMode);
       setTeamsCount(restoredTeamsCount);
-      setTeams(Array.isArray(restored?.teams) ? restored.teams : []);
+      // Re-draw teams to keep participant data (e.g., avatarUrl) in sync
+      setTeams([]);
       setIsDrawOpen(true);
       return;
     }
@@ -596,17 +600,42 @@ async function confirmDelete() {
     return participants.filter((p) => !!selectedIds[p.id]);
   }
 
-  function doDraw() {
-    const list = selectedParticipants();
-    const names = list.map((p) => p.name).filter(Boolean);
+  function normalizeParticipant(p) {
+    if (!p || typeof p !== "object") {
+      const name = String(p ?? "");
+      return { id: name || null, name, email: "", avatarUrl: null };
+    }
 
-    if (names.length < 2) {
+    return {
+      id: p.id ?? p.userId ?? p.email ?? p.name ?? null,
+      name: p.name ?? "",
+      email: p.email ?? "",
+      avatarUrl: p.avatarUrl ?? null,
+    };
+  }
+
+  function doDraw() {
+    const list = selectedParticipants().map(normalizeParticipant);
+    if (list.length < 2) {
       setTeams([]);
       return;
     }
 
-    const shuffled = shuffle(names);
+    const shuffled = shuffle(list);
     setTeams(splitIntoTeams(shuffled, teamsCount));
+    setDrawNotice(true);
+  }
+
+  function drawOnePlayer() {
+    const list = selectedParticipants().map(normalizeParticipant);
+    if (list.length < 1) {
+      setDrawnPlayer(null);
+      return;
+    }
+
+    const pick = list[Math.floor(Math.random() * list.length)];
+    setDrawnPlayer(pick);
+    setDrawNotice(true);
   }
 
   useEffect(() => {
@@ -618,9 +647,33 @@ async function confirmDelete() {
 
   useEffect(() => {
     if (!isDrawOpen) return;
-    if (!teams || teams.length === 0) doDraw();
+    setTeams([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDrawOpen]);
+
+  useEffect(() => {
+    if (!isDrawOpen) return;
+    if (drawnPlayer) setDrawnPlayer(null);
+    if (drawNotice) setDrawNotice(false);
+    if (drawNoticeTimerRef.current) {
+      clearTimeout(drawNoticeTimerRef.current);
+      drawNoticeTimerRef.current = null;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drawMode, teamsCount, selectedIds, isDrawOpen]);
+
+  useEffect(() => {
+    if (!drawNotice) return;
+    if (drawNoticeTimerRef.current) clearTimeout(drawNoticeTimerRef.current);
+    drawNoticeTimerRef.current = setTimeout(() => {
+      setDrawNotice(false);
+      drawNoticeTimerRef.current = null;
+    }, 3000);
+    return () => {
+      if (drawNoticeTimerRef.current) clearTimeout(drawNoticeTimerRef.current);
+      drawNoticeTimerRef.current = null;
+    };
+  }, [drawNotice]);
 
   // ===== render =====
   if (loading) {
@@ -983,7 +1036,7 @@ async function confirmDelete() {
                 </button>
 
                 <button
-                  className="actions-item"
+                  className="actions-item actions-item-featured"
                   onClick={() => {
                     setActionsOpen(false);
                     openDraw();
@@ -992,11 +1045,11 @@ async function confirmDelete() {
                   title={
                     participants.length < 2
                       ? "Inscreva pelo menos 2 pessoas"
-                      : "Sortear times"
+                      : "Sorteios"
                   }
                   role="menuitem"
                 >
-                  Sortear times
+                  Sorteios
                 </button>
 
                 {canEdit && (
@@ -1303,9 +1356,26 @@ async function confirmDelete() {
                     >
                       <div className="team-title">Time {idx + 1}</div>
                       <ul className="team-list">
-                        {t.map((name) => (
-                          <li key={name}>{name}</li>
-                        ))}
+                        {t.map((p, pIdx) => {
+                          const isObj = p && typeof p === "object";
+                          const name = isObj ? p.name : String(p ?? "");
+                          const email = isObj ? p.email : "";
+                          const avatarUrl = isObj ? p.avatarUrl : null;
+                          const key = isObj ? p.id ?? `${name}-${pIdx}` : `${name}-${pIdx}`;
+
+                          return (
+                            <li key={key} className="team-item">
+                              <Avatar
+                                className="team-avatar"
+                                name={name}
+                                email={email}
+                                avatarUrl={avatarUrl}
+                                size={26}
+                              />
+                              <span>{name}</span>
+                            </li>
+                          );
+                        })}
                       </ul>
                     </div>
                   ))}
@@ -1378,13 +1448,43 @@ async function confirmDelete() {
                   </div>
                 )}
 
+                <div className="draw-result">
+                  <div className="draw-result-label">Jogador sorteado</div>
+                  {drawnPlayer ? (
+                    <div className="draw-result-card">
+                      <Avatar
+                        className="team-avatar"
+                        name={drawnPlayer.name}
+                        email={drawnPlayer.email}
+                        avatarUrl={drawnPlayer.avatarUrl}
+                        size={30}
+                      />
+                      <span>{drawnPlayer.name}</span>
+                    </div>
+                  ) : (
+                    <div className="draw-result-empty">Nenhum sorteado ainda.</div>
+                  )}
+                </div>
+
                 <div className="modal-actions modal-actions-bottom">
+                  {drawNotice ? (
+                    <span className="draw-notice draw-notice-inline">
+                      Sorteio realizado!
+                    </span>
+                  ) : null}
                   <button
                     className="primary-button"
                     onClick={doDraw}
                     disabled={selectedParticipants().length < 2}
                   >
-                    Sortear novamente
+                    Sortear times
+                  </button>
+                  <button
+                    className="secondary-button"
+                    onClick={drawOnePlayer}
+                    disabled={selectedParticipants().length < 1}
+                  >
+                    Sortear jogador
                   </button>
                   <button className="secondary-button" onClick={closeDraw}>
                     Fechar

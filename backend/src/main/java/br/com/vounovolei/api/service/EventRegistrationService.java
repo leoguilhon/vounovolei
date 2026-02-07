@@ -83,6 +83,7 @@ public class EventRegistrationService {
                         u.getId(),
                         u.getName(),
                         u.getEmail(),
+                        u.getAvatarUrl(),
                         Boolean.TRUE.equals(bringBallByUserId.get(u.getId()))
                 ))
                 .toList();
