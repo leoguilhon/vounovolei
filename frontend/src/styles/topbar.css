@@ -8,13 +8,14 @@
   top: 0;
   z-index: 50;
 
-  /* Cool glass surface */
-  background: rgba(247, 249, 255, 0.92);
+  /* Opção A: faixa azul com brilho amarelo sutil */
+  background:
+    linear-gradient(90deg, rgba(0, 32, 96, 0.94) 0%, rgba(0, 32, 96, 0.94) 62%, rgba(0, 48, 120, 0.94) 100%);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 
-  border-bottom: 1px solid rgba(0, 32, 96, 0.18);
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+  border-bottom: 2px solid rgba(240, 208, 0, 0.55);
+  box-shadow: 0 10px 24px rgba(0, 32, 96, 0.18);
 
   width: 100vw;
   margin-left: calc(50% - 50vw);
@@ -81,7 +82,7 @@
   font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: var(--color-text);
+  color: #ffffff;
   font-family: var(--font-display);
 }
 
@@ -91,16 +92,16 @@
   align-items: center;
   gap: 10px;
   padding: 6px 10px 6px 6px;
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: var(--radius-full);
-  background: var(--color-surface);
-  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .profile-btn:hover {
-  border-color: var(--color-text-muted);
-  box-shadow: var(--shadow-sm);
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 8px 18px rgba(0, 32, 96, 0.25);
 }
 
 .profile-avatar {
@@ -118,7 +119,7 @@
 .profile-label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--color-text);
+  color: #ffffff;
   max-width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -127,7 +128,7 @@
 
 .profile-caret {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: rgba(255, 255, 255, 0.7);
   transition: transform var(--transition-fast);
 }
 

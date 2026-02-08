@@ -29,10 +29,12 @@ export default function Register() {
       await register({ name, email, password });
       navigate("/events");
     } catch (err) {
+      const backendMsg = err?.response?.data?.message || err?.response?.data?.error;
+      const code = backendMsg || err?.message;
       const msg =
-        err?.response?.data?.message ||
-        err?.response?.data?.error ||
-        "Falha ao cadastrar. Tente novamente.";
+        code === "EMAIL_ALREADY_IN_USE"
+          ? "Este email já está em uso. Use outro ou faça login."
+          : backendMsg || "Falha ao cadastrar. Tente novamente.";
       setError(msg);
     } finally {
       setLoading(false);

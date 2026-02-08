@@ -376,6 +376,11 @@
   border-color: rgba(29, 78, 216, 0.35);
 }
 
+.actions-item-featured:disabled {
+  opacity: 1;
+  cursor: not-allowed;
+}
+
 /* ─── Error Box ─── */
 .error-box {
   margin-top: 16px;

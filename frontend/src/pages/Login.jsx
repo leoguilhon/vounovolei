@@ -27,12 +27,14 @@ export default function Login() {
     } catch (err) {
       const backendMsg =
         err?.response?.data?.message || err?.response?.data?.error;
+      const code = backendMsg || err?.message;
 
       setError(
-        backendMsg ||
-          (err?.message === "TOKEN_NAO_RETORNADO"
-            ? "Login ok, mas o backend não retornou o token."
-            : "Falha no login. Verifique suas credenciais.")
+        code === "INVALID_CREDENTIALS"
+          ? "Email ou senha inválidos. Verifique e tente novamente."
+          : code === "TOKEN_NAO_RETORNADO"
+          ? "Login ok, mas o backend não retornou o token."
+          : backendMsg || "Falha no login. Verifique suas credenciais."
       );
     } finally {
       setLoading(false);
