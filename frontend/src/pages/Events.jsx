@@ -7,7 +7,7 @@ import EventCard from "../components/EventCard";
 import Avatar from "../components/Avatar";
 import "../styles/events.css";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 12;
 
 function pad2(v) {
   return String(v).padStart(2, "0");
@@ -36,14 +36,6 @@ function toComparableKey(isoLike) {
   return `${Y}-${pad2(M)}-${pad2(D)}T${hh}:${mm}:${ss}`;
 }
 
-function nowComparableKey() {
-  const d = new Date();
-  return (
-    `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}` +
-    `T${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`
-  );
-}
-
 function getJwtSub(token) {
   try {
     if (!token) return null;
@@ -64,6 +56,7 @@ function getJwtSub(token) {
 }
 
 const PAST_GRACE_HOURS = 12;
+const RECENT_PAST_DAYS = 7;
 
 function parseLocalDateTimeToMs(isoLike) {
   if (!isoLike) return null;
@@ -293,12 +286,14 @@ export default function Events() {
   }, [events, detailById]);
 
   const eventsEnriched = useMemo(() => {
-    const nowKey = nowComparableKey();
+    const minAllowedMs =
+      Date.now() - RECENT_PAST_DAYS * 24 * 60 * 60 * 1000;
 
     const enriched = events.map((e) => {
       const detail = detailById[e.id];
 
       const key = toComparableKey(e?.eventDateTime);
+      const eventDateMs = parseLocalDateTimeToMs(e?.eventDateTime);
       const isPast = isPastAfterHours(e?.eventDateTime, PAST_GRACE_HOURS);
 
       const createdBy = e?.createdByUserId ?? null;
@@ -320,18 +315,23 @@ export default function Events() {
         isRegistered,
         isPast,
         isOwner,
+        _eventDateMs: eventDateMs,
         _key: key ?? "9999-12-31T23:59:59",
       };
     });
 
+    const visibleByDate = enriched.filter(
+      (e) => e._eventDateMs != null && e._eventDateMs >= minAllowedMs
+    );
+
     // futuros primeiro (mais próximos), passados por último
-    enriched.sort((a, b) => {
+    visibleByDate.sort((a, b) => {
       if (a.isPast !== b.isPast) return a.isPast ? 1 : -1;
       if (!a.isPast && !b.isPast) return a._key.localeCompare(b._key);
       return b._key.localeCompare(a._key);
     });
 
-    return enriched;
+    return visibleByDate;
   }, [events, detailById, meUserId]);
 
   const totalPages = useMemo(() => {
