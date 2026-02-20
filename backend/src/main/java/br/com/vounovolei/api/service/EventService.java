@@ -17,8 +17,13 @@ import java.util.List;
 public class EventService {
 
     private final EventRepository eventRepository;
+    private final RateLimitService rateLimitService;
 
-    public EventResponse create(CreateEventRequest req, Long createdByUserId) {
+    public EventResponse create(CreateEventRequest req, Long createdByUserId, boolean isAdmin) {
+        if (!isAdmin) {
+            rateLimitService.checkCreateEventLimit(createdByUserId);
+        }
+
         Event e = Event.builder()
                 .title(req.title().trim())
                 .eventDateTime(req.eventDateTime())

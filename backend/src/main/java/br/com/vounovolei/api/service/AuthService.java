@@ -25,8 +25,11 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final RateLimitService rateLimitService;
 
-    public String register(RegisterRequest req) {
+    public String register(RegisterRequest req, String clientKey) {
+        rateLimitService.checkCreateAccountLimit(clientKey);
+
         if (userRepository.findByEmail(req.email().toLowerCase().trim()).isPresent()) {
             throw new IllegalArgumentException("EMAIL_ALREADY_IN_USE");
         }

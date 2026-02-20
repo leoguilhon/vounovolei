@@ -29,7 +29,9 @@ public class EventController {
     @PostMapping
     public ResponseEntity<EventResponse> create(@RequestBody @Valid CreateEventRequest req, Authentication auth) {
         Long userId = Long.valueOf(auth.getName()); // setado no JwtAuthFilter como subject
-        return ResponseEntity.ok(eventService.create(req, userId));
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()) || "ADMIN".equals(a.getAuthority()));
+        return ResponseEntity.ok(eventService.create(req, userId, isAdmin));
     }
 
     @GetMapping

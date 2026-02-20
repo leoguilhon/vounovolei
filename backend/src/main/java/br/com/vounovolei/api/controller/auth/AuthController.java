@@ -14,6 +14,7 @@ import br.com.vounovolei.api.controller.auth.dto.UpdateProfileRequest;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import jakarta.servlet.http.HttpServletRequest;
 
 
 @RestController
@@ -29,8 +30,8 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody @Valid RegisterRequest req) {
-        String token = authService.register(req);
+    public ResponseEntity<AuthResponse> register(@RequestBody @Valid RegisterRequest req, HttpServletRequest request) {
+        String token = authService.register(req, extractClientKey(request));
         return ResponseEntity.ok(new AuthResponse(token));
     }
 
@@ -49,5 +50,19 @@ public class AuthController {
     public ResponseEntity<Void> changePassword(@RequestBody ChangePasswordRequest req) {
         authService.changeMyPassword(req);
         return ResponseEntity.noContent().build();
+    }
+
+    private String extractClientKey(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+
+        String xRealIp = request.getHeader("X-Real-IP");
+        if (xRealIp != null && !xRealIp.isBlank()) {
+            return xRealIp.trim();
+        }
+
+        return request.getRemoteAddr();
     }
 }
