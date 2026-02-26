@@ -2,6 +2,7 @@ package br.com.vounovolei.api.controller.auth;
 
 import br.com.vounovolei.api.controller.auth.dto.AuthResponse;
 import br.com.vounovolei.api.controller.auth.dto.LoginRequest;
+import br.com.vounovolei.api.controller.auth.dto.RefreshTokenRequest;
 import br.com.vounovolei.api.controller.auth.dto.RegisterRequest;
 import br.com.vounovolei.api.service.AuthService;
 import jakarta.validation.Valid;
@@ -31,14 +32,20 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@RequestBody @Valid RegisterRequest req, HttpServletRequest request) {
-        String token = authService.register(req, extractClientKey(request));
-        return ResponseEntity.ok(new AuthResponse(token));
+        var tokens = authService.register(req, extractClientKey(request));
+        return ResponseEntity.ok(AuthResponse.of(tokens.accessToken(), tokens.refreshToken()));
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody @Valid LoginRequest req) {
-        String token = authService.login(req);
-        return ResponseEntity.ok(new AuthResponse(token));
+        var tokens = authService.login(req);
+        return ResponseEntity.ok(AuthResponse.of(tokens.accessToken(), tokens.refreshToken()));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(@RequestBody @Valid RefreshTokenRequest req) {
+        var tokens = authService.refresh(req);
+        return ResponseEntity.ok(AuthResponse.of(tokens.accessToken(), tokens.refreshToken()));
     }
 
     @PatchMapping("/me")

@@ -1,5 +1,7 @@
 package br.com.vounovolei.api.service;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,37 +12,57 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-
-
 @Service
 public class JwtService {
 
     private final SecretKey key;
-    private final long expirationMinutes;
+    private final long accessExpirationMinutes;
+    private final long refreshExpirationMinutes;
 
     public JwtService(
             @Value("${security.jwt.secret}") String secret,
-            @Value("${security.jwt.expiration-minutes}") long expirationMinutes
+            @Value("${security.jwt.expiration-minutes}") long accessExpirationMinutes,
+            @Value("${security.jwt.refresh-expiration-minutes}") long refreshExpirationMinutes
     ) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        this.expirationMinutes = expirationMinutes;
+        this.accessExpirationMinutes = accessExpirationMinutes;
+        this.refreshExpirationMinutes = refreshExpirationMinutes;
     }
 
-    public String generateToken(Long userId, String email, String role) {
+    public String generateAccessToken(Long userId, String email, String role) {
         Instant now = Instant.now();
-        Instant exp = now.plusSeconds(expirationMinutes * 60);
+        Instant exp = now.plusSeconds(accessExpirationMinutes * 60);
 
         return Jwts.builder()
                 .subject(String.valueOf(userId))
+                .claim("type", "access")
                 .claim("email", email)
                 .claim("role", role)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(exp))
                 .signWith(key)
                 .compact();
+    }
+
+    public String generateRefreshToken(Long userId) {
+        Instant now = Instant.now();
+        Instant exp = now.plusSeconds(refreshExpirationMinutes * 60);
+
+        return Jwts.builder()
+                .subject(String.valueOf(userId))
+                .claim("type", "refresh")
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(exp))
+                .signWith(key)
+                .compact();
+    }
+
+    public boolean isAccessToken(Claims claims) {
+        return "access".equals(claims.get("type", String.class));
+    }
+
+    public boolean isRefreshToken(Claims claims) {
+        return "refresh".equals(claims.get("type", String.class));
     }
 
     public Claims parseClaims(String token) {

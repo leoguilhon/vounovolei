@@ -47,7 +47,8 @@ A API sobe em `http://localhost:8080`.
 
 - Porta: `8080`
 - Banco: `jdbc:mysql://localhost:3306/vounovolei`
-- JWT expiration: `720` minutos
+- Access token expiration: `15` minutos
+- Refresh token expiration: `10080` minutos (7 dias)
 - Upload base dir: `uploads`
 - Upload avatar maximo: `2097152` bytes (2MB)
 - CORS permitido: `http://localhost:5173`
@@ -71,6 +72,7 @@ Authorization: Bearer <token>
 Rotas publicas:
 - `POST /auth/register`
 - `POST /auth/login`
+- `POST /auth/refresh`
 - `GET /media/**` (arquivos de avatar)
 
 ## Endpoints
@@ -80,6 +82,7 @@ Rotas publicas:
 - `GET /auth/me`
 - `POST /auth/register`
 - `POST /auth/login`
+- `POST /auth/refresh`
 - `PATCH /auth/me`
 - `PATCH /auth/me/password`
 

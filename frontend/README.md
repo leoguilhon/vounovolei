@@ -59,9 +59,10 @@ Protegidas (exigem token):
 O cliente HTTP esta em `src/api/http.js`:
 - usa `VITE_API_URL` como `baseURL`
 - injeta automaticamente `Authorization: Bearer <token>` com token salvo no `localStorage`
+- ao receber `401`, tenta renovar com `POST /auth/refresh` usando `refreshToken`
 
 Principais chamadas:
-- Auth: `/auth/login`, `/auth/register`, `/auth/me`, `/auth/me/password`
+- Auth: `/auth/login`, `/auth/register`, `/auth/refresh`, `/auth/me`, `/auth/me/password`
 - Avatar: `/auth/me/avatar`
 - Eventos: `/events`, `/events/{id}`, `/events/{id}/detail`, `/events/{id}/register`
 - Admin: `/admin/users`, `/admin/events`

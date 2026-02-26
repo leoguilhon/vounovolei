@@ -35,7 +35,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         // só rotas públicas
-        if ("/auth/login".equals(path) || "/auth/register".equals(path)) {
+        if ("/auth/login".equals(path) || "/auth/register".equals(path) || "/auth/refresh".equals(path)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -50,6 +50,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         try {
             Claims claims = jwtService.parseClaims(token);
+            if (!jwtService.isAccessToken(claims)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
 
             String userId = claims.getSubject(); // sub = userId
             String role = (String) claims.get("role");

@@ -23,20 +23,29 @@ export function AuthProvider({ children }) {
   async function login({ email, password }) {
     const { data } = await http.post("/auth/login", { email, password });
 
-    const token =
+    const accessToken =
       data?.token || data?.accessToken || data?.jwt || data?.access_token;
-    if (!token) throw new Error("TOKEN_NAO_RETORNADO");
+    const refreshToken = data?.refreshToken;
+    if (!accessToken || !refreshToken) throw new Error("TOKEN_NAO_RETORNADO");
 
-    localStorage.setItem("token", token); // grava ja
-    setToken(token);
+    localStorage.setItem("token", accessToken);
+    localStorage.setItem("refreshToken", refreshToken);
+    setToken(accessToken);
 
-    return token;
+    return accessToken;
   }
 
   async function register({ name, email, password }) {
-    await http.post("/auth/register", { name, email, password });
-    // apos cadastrar, ja loga automaticamente
-    await login({ email, password });
+    const { data } = await http.post("/auth/register", { name, email, password });
+
+    const accessToken =
+      data?.token || data?.accessToken || data?.jwt || data?.access_token;
+    const refreshToken = data?.refreshToken;
+    if (!accessToken || !refreshToken) throw new Error("TOKEN_NAO_RETORNADO");
+
+    localStorage.setItem("token", accessToken);
+    localStorage.setItem("refreshToken", refreshToken);
+    setToken(accessToken);
   }
 
   const refreshMe = useCallback(async () => {
@@ -53,6 +62,7 @@ export function AuthProvider({ children }) {
   const logout = useCallback(() => {
     setToken(null);
     setUser(null);
+    localStorage.removeItem("refreshToken");
   }, []);
 
   const value = useMemo(

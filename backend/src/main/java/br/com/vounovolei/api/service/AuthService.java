@@ -3,8 +3,10 @@ package br.com.vounovolei.api.service;
 import br.com.vounovolei.api.controller.auth.dto.ChangePasswordRequest;
 import br.com.vounovolei.api.controller.auth.dto.LoginRequest;
 import br.com.vounovolei.api.controller.auth.dto.MeResponse;
+import br.com.vounovolei.api.controller.auth.dto.RefreshTokenRequest;
 import br.com.vounovolei.api.controller.auth.dto.RegisterRequest;
 import br.com.vounovolei.api.controller.auth.dto.UpdateProfileRequest;
+import io.jsonwebtoken.Claims;
 import br.com.vounovolei.api.domain.user.User;
 import br.com.vounovolei.api.domain.user.UserRole;
 import br.com.vounovolei.api.repository.UserRepository;
@@ -27,7 +29,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final RateLimitService rateLimitService;
 
-    public String register(RegisterRequest req, String clientKey) {
+    public AuthTokens register(RegisterRequest req, String clientKey) {
         rateLimitService.checkCreateAccountLimit(clientKey);
 
         if (userRepository.findByEmail(req.email().toLowerCase().trim()).isPresent()) {
@@ -46,10 +48,10 @@ public class AuthService {
                 .build();
 
         userRepository.save(user);
-        return jwtService.generateToken(user.getId(), user.getEmail(), user.getRole().name());
+        return issueTokens(user);
     }
 
-    public String login(LoginRequest req) {
+    public AuthTokens login(LoginRequest req) {
         User user = userRepository.findByEmail(req.email().toLowerCase().trim())
                 .orElseThrow(() -> new IllegalArgumentException("INVALID_CREDENTIALS"));
 
@@ -57,7 +59,38 @@ public class AuthService {
             throw new IllegalArgumentException("INVALID_CREDENTIALS");
         }
 
-        return jwtService.generateToken(user.getId(), user.getEmail(), user.getRole().name());
+        return issueTokens(user);
+    }
+
+    public AuthTokens refresh(RefreshTokenRequest req) {
+        Claims claims;
+        try {
+            claims = jwtService.parseClaims(req.refreshToken());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "REFRESH_TOKEN_INVALIDO");
+        }
+
+        if (!jwtService.isRefreshToken(claims)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "REFRESH_TOKEN_INVALIDO");
+        }
+
+        Long userId;
+        try {
+            userId = Long.valueOf(claims.getSubject());
+        } catch (NumberFormatException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "REFRESH_TOKEN_INVALIDO");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "REFRESH_TOKEN_INVALIDO"));
+
+        return issueTokens(user);
+    }
+
+    private AuthTokens issueTokens(User user) {
+        String accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail(), user.getRole().name());
+        String refreshToken = jwtService.generateRefreshToken(user.getId());
+        return new AuthTokens(accessToken, refreshToken);
     }
 
     private User getLoggedUser() {
