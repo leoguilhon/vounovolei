@@ -1,16 +1,84 @@
-# React + Vite
+﻿# Frontend - VouNoVolei Web
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicacao React para autenticacao, listagem de eventos, inscricao, perfil e administracao.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- React 19
+- React Router 7
+- Axios
+- Vite 7
 
-## React Compiler
+## Como executar
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Pre-requisitos:
+- Node.js 20+
+- npm 10+
 
-## Expanding the ESLint configuration
+1. Instale dependencias:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm install
+```
+
+2. Crie o arquivo `.env` na pasta `frontend/`:
+
+```env
+VITE_API_URL=http://localhost:8080
+```
+
+3. Rode em desenvolvimento:
+
+```bash
+npm run dev
+```
+
+4. Acesse `http://localhost:5173`.
+
+## Scripts
+
+- `npm run dev`: inicia ambiente de desenvolvimento
+- `npm run build`: gera build de producao
+- `npm run preview`: serve build localmente
+- `npm run lint`: executa ESLint
+
+## Rotas da aplicacao
+
+Publicas:
+- `/login`
+- `/register`
+
+Protegidas (exigem token):
+- `/events`
+- `/events/:id`
+- `/profile/edit`
+- `/admin`
+
+## Integracao com backend
+
+O cliente HTTP esta em `src/api/http.js`:
+- usa `VITE_API_URL` como `baseURL`
+- injeta automaticamente `Authorization: Bearer <token>` com token salvo no `localStorage`
+
+Principais chamadas:
+- Auth: `/auth/login`, `/auth/register`, `/auth/me`, `/auth/me/password`
+- Avatar: `/auth/me/avatar`
+- Eventos: `/events`, `/events/{id}`, `/events/{id}/detail`, `/events/{id}/register`
+- Admin: `/admin/users`, `/admin/events`
+
+## Funcionalidades de interface
+
+- Login e cadastro
+- Lista de eventos com paginação
+- Criacao de evento
+- Detalhe do evento com participantes
+- Inscricao com opcao de levar bola
+- Sorteio de times no detalhe do evento
+- Edicao de perfil (nome, email, senha, avatar)
+- Painel administrativo para usuarios e eventos
+
+## Observacoes importantes
+
+- Sem `VITE_API_URL`, a aplicacao nao consegue chamar a API.
+- O backend precisa permitir CORS para `http://localhost:5173`.
+- Avatares usam URL retornada pela API (`/media/...`) e sao resolvidos com base em `VITE_API_URL`.

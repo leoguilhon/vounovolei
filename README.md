@@ -1,48 +1,87 @@
-# VouNoVôlei 🏐
+﻿# VouNoVolei
 
-**VouNoVôlei** é uma plataforma **fullstack** para divulgação e gerenciamento de eventos de vôlei (ex.: vôlei de praia), permitindo que usuários se autentiquem, visualizem eventos, acessem detalhes e realizem **inscrições**.
+Plataforma fullstack para criacao e gerenciamento de eventos de volei.
 
-Este repositório é um **monorepo** contendo:
-- `frontend/` → aplicação web (React)
-- `backend/` → API REST (Spring Boot)
+O repositorio esta organizado como monorepo:
+- `frontend/`: aplicacao web em React + Vite
+- `backend/`: API REST em Spring Boot
 
----
+## Funcionalidades
 
-## ✨ Funcionalidades
+- Autenticacao com JWT (cadastro, login, perfil e troca de senha)
+- CRUD de eventos
+- Inscricao e cancelamento em eventos
+- Indicacao de participante que leva bola (`bringBall`)
+- Upload/remocao de avatar do usuario
+- Painel administrativo para usuarios e eventos
+- Sorteio de times no detalhe do evento (frontend)
 
-- Autenticação (login/logout)
-- Listagem de eventos
-- Detalhe de evento com inscritos
-- Inscrição e cancelamento de inscrição
-- Topbar/UX consistente entre páginas (events, detail, etc.)
+## Stack
 
----
+- Frontend: React 19, React Router 7, Axios, Vite
+- Backend: Java 17, Spring Boot 3, Spring Security, Spring Data JPA, Flyway, MySQL
 
-## 🧱 Stack
+## Estrutura
 
-### Frontend
-- React + Vite
-- React Router
-- CSS (arquivos por página/componentes)
-- Consumo de API via HTTP client (ex.: Axios)
+```text
+vounovolei/
+|- frontend/
+|  |- src/
+|  |- public/
+|  `- README.md
+|- backend/
+|  |- src/
+|  `- README.md
+`- README.md
+```
 
-### Backend
-- Java + Spring Boot
-- REST API (CRUD de eventos + inscrições)
-- Persistência com JPA/Hibernate
-- Testes (quando aplicável)
+## Como executar (ambiente local)
 
----
+Pre-requisitos:
+- Node.js 20+
+- npm 10+
+- Java 17
+- MySQL 8+
 
-## 🗂️ Estrutura do projeto
+1. Suba o banco MySQL e crie o schema:
+
+```sql
+CREATE DATABASE vounovolei;
+```
+
+2. Configure e rode o backend:
 
 ```bash
-vounovolei/
-├─ frontend/
-│  ├─ src/
-│  ├─ public/
-│  └─ ...
-├─ backend/
-│  ├─ src/
-│  └─ ...
-└─ README.md
+cd backend
+./mvnw spring-boot:run
+```
+
+No Windows PowerShell:
+
+```powershell
+cd backend
+.\mvnw.cmd spring-boot:run
+```
+
+3. Configure e rode o frontend:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+4. Acesse:
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:8080`
+
+## Configuracoes principais
+
+- O frontend usa `VITE_API_URL` como base da API.
+- O backend esta com CORS liberado para `http://localhost:5173`.
+- Upload de avatar: ate 2MB (JPG/PNG/WEBP), servido em `/media/**`.
+
+## Documentacao por modulo
+
+- Backend: [backend/README.md](backend/README.md)
+- Frontend: [frontend/README.md](frontend/README.md)
