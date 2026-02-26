@@ -5,6 +5,7 @@ import Register from "./pages/Register";
 import Events from "./pages/Events";
 import EventDetail from "./pages/EventDetail";
 import EditProfile from "./pages/EditProfile";
+import AdminPanel from "./pages/AdminPanel";
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/events" element={<Events />} />
         <Route path="/events/:id" element={<EventDetail />} />
         <Route path="/profile/edit" element={<EditProfile />} />
+        <Route path="/admin" element={<AdminPanel />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/events" replace />} />

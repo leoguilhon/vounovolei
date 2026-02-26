@@ -682,13 +682,13 @@ async function confirmDelete() {
         <header className="topbar">
           <div className="topbar-inner">
             <div className="topbar-center">
-              <div className="brand">
+              <Link className="brand" to="/events">
                 <img
                   className="brand-logo"
                   src="/images/logo-nobg.png"
                   alt="Vou No Vôlei"
                 />
-              </div>
+              </Link>
             </div>
 
             <div className="topbar-right" ref={menuRef}>
@@ -721,6 +721,16 @@ async function confirmDelete() {
                   >
                     Editar perfil
                   </Link>
+
+                  {isAdmin && (
+                    <Link
+                      className="profile-menu-item"
+                      to="/admin"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Painel Administrativo
+                    </Link>
+                  )}
 
                   <button
                     className="profile-menu-item danger"
@@ -787,13 +797,13 @@ async function confirmDelete() {
         <header className="topbar">
           <div className="topbar-inner">
             <div className="topbar-left">
-              <div className="brand">
+              <Link className="brand" to="/events">
                 <img
                   className="brand-logo"
                   src="/images/logo-nobg.png"
                   alt="Vou No Vôlei"
                 />
-              </div>
+              </Link>
             </div>
 
             <div className="topbar-right" ref={menuRef}>
@@ -827,6 +837,16 @@ async function confirmDelete() {
                     Editar perfil
                   </Link>
 
+                  {isAdmin && (
+                    <Link
+                      className="profile-menu-item"
+                      to="/admin"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Painel Administrativo
+                    </Link>
+                  )}
+
                   <button
                     className="profile-menu-item danger"
                     onClick={() => {
@@ -857,13 +877,13 @@ async function confirmDelete() {
       <header className="topbar">
         <div className="topbar-inner">
           <div className="topbar-center">
-            <div className="brand">
+            <Link className="brand" to="/events">
               <img
                 className="brand-logo"
                 src="/images/logo-nobg.png"
                 alt="Vou No Vôlei"
               />
-            </div>
+            </Link>
           </div>
 
           <div className="topbar-right" ref={menuRef}>
@@ -898,6 +918,16 @@ async function confirmDelete() {
                 >
                   Editar perfil
                 </Link>
+
+                {isAdmin && (
+                  <Link
+                    className="profile-menu-item"
+                    to="/admin"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Painel Administrativo
+                  </Link>
+                )}
 
                 <button
                   className="profile-menu-item danger"

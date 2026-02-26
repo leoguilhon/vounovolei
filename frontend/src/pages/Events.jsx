@@ -363,6 +363,10 @@ export default function Events() {
   const avatarName = useMemo(() => (user ? user.name : me?.name) || "", [user, me]);
   const avatarEmail = useMemo(() => (user ? user.email : me?.email) || "", [user, me]);
   const avatarUrl = useMemo(() => (user ? user.avatarUrl : me?.avatarUrl) ?? null, [user, me]);
+  const isAdmin = useMemo(() => {
+    const role = String(user?.role ?? me?.role ?? "").toUpperCase();
+    return role === "ADMIN";
+  }, [user?.role, me?.role]);
 
   useEffect(() => {
     function onDocClick(e) {
@@ -524,13 +528,13 @@ export default function Events() {
       <header className="topbar">
         <div className="topbar-inner">
           <div className="topbar-center">
-            <div className="brand">
+            <Link className="brand" to="/events">
               <img
                 className="brand-logo"
                 src="/images/logo-nobg.png"
                 alt="Vou No Vôlei"
               />
-            </div>
+            </Link>
           </div>
 
           <div className="topbar-right" ref={menuRef}>
@@ -565,6 +569,16 @@ export default function Events() {
                 >
                   Editar perfil
                 </Link>
+
+                {isAdmin && (
+                  <Link
+                    className="profile-menu-item"
+                    to="/admin"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Painel Administrativo
+                  </Link>
+                )}
 
                 <button
                   className="profile-menu-item danger"
