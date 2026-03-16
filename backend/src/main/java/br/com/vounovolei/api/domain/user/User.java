@@ -28,12 +28,18 @@ public class User {
     @Column(nullable = false, length = 255)
     private String password;
 
+    @Column(name = "secret_word_hash", length = 255)
+    private String secretWordHash;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private UserRole role;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
+
+    @Column(name = "secret_word_last_password_reset_at")
+    private Instant secretWordLastPasswordResetAt;
 
     @Column(name = "avatar_url", length = 512)
     private String avatarUrl;

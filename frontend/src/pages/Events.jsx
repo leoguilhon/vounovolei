@@ -602,8 +602,12 @@ export default function Events() {
         {!loading && !error && (
           <>
             <div className="events-grid">
-              {pagedEvents.map((e) => (
-                <EventCard key={e.id} event={e} />
+              {pagedEvents.map((e, index) => (
+                <EventCard
+                  key={e.id}
+                  event={e}
+                  featured={page === 1 && index === 0}
+                />
               ))}
             </div>
 

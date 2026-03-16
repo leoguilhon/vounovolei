@@ -10,9 +10,8 @@ const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = ["image/png", "image/jpeg", "image/webp"];
 
 export default function EditProfile() {
-  const { user, setUser, refreshMe, logout } = useAuth();
+  const { user, refreshMe, logout } = useAuth();
 
-  // header/menu
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const [me, setMe] = useState(null);
@@ -24,6 +23,25 @@ export default function EditProfile() {
   const [avatarRemoving, setAvatarRemoving] = useState(false);
   const [avatarMsg, setAvatarMsg] = useState("");
   const [avatarError, setAvatarError] = useState("");
+
+  const [loading, setLoading] = useState(true);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [savingSecretWord, setSavingSecretWord] = useState(false);
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+
+  const [newSecretWord, setNewSecretWord] = useState("");
+  const [confirmNewSecretWord, setConfirmNewSecretWord] = useState("");
+  const [showSecretWord, setShowSecretWord] = useState(false);
+
+  const [msg, setMsg] = useState("");
+  const [error, setError] = useState("");
 
   function capitalizeFirst(text) {
     const s = String(text ?? "").trim();
@@ -46,20 +64,13 @@ export default function EditProfile() {
     }
 
     loadMeTopbar();
-
     return () => {
       mounted = false;
     };
   }, [refreshMe, logout]);
 
-  const rawName = useMemo(() => {
-    return user?.name?.trim() || me?.name?.trim() || "";
-  }, [user?.name, me?.name]);
-
-  const displayName = useMemo(() => {
-    return rawName ? capitalizeFirst(rawName) : "";
-  }, [rawName]);
-
+  const rawName = useMemo(() => user?.name?.trim() || me?.name?.trim() || "", [user?.name, me?.name]);
+  const displayName = useMemo(() => (rawName ? capitalizeFirst(rawName) : ""), [rawName]);
   const avatarName = useMemo(() => (user ? user.name : me?.name) || "", [user, me]);
   const avatarEmail = useMemo(() => (user ? user.email : me?.email) || "", [user, me]);
   const avatarUrl = useMemo(() => (user ? user.avatarUrl : me?.avatarUrl) ?? null, [user, me]);
@@ -93,6 +104,48 @@ export default function EditProfile() {
       URL.revokeObjectURL(avatarPreview);
     };
   }, [avatarPreview]);
+
+  const hasPasswordFields =
+    currentPassword.trim() || newPassword.trim() || confirmNewPassword.trim();
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadMe() {
+      setLoading(true);
+      setError("");
+      setMsg("");
+
+      try {
+        const data = (await refreshMe?.()) ?? null;
+        if (!mounted) return;
+
+        setName(data?.name ?? "");
+        setEmail(data?.email ?? "");
+      } catch (e) {
+        if (!mounted) return;
+
+        if (e?.response?.status === 401) {
+          logout?.();
+          return;
+        }
+
+        if (user) {
+          setName(user.name ?? "");
+          setEmail(user.email ?? "");
+        } else {
+          setError(e?.response?.data?.message || "Nao foi possivel carregar seus dados.");
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    loadMe();
+    return () => {
+      mounted = false;
+    };
+  }, [refreshMe, logout]);
 
   function resetAvatarSelection() {
     setAvatarFile(null);
@@ -155,7 +208,6 @@ export default function EditProfile() {
         e?.response?.data?.message ||
           "Nao foi possivel atualizar a foto. Tente novamente."
       );
-      console.error("PUT /auth/me/avatar ERROR:", e);
     } finally {
       setAvatarSaving(false);
     }
@@ -183,71 +235,10 @@ export default function EditProfile() {
         e?.response?.data?.message ||
           "Nao foi possivel remover a foto. Tente novamente."
       );
-      console.error("DELETE /auth/me/avatar ERROR:", e);
     } finally {
       setAvatarRemoving(false);
     }
   }
-
-  // ===== pagina edit profile (seu codigo original) =====
-
-  const [loading, setLoading] = useState(true);
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [savingPassword, setSavingPassword] = useState(false);
-
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmNewPassword, setConfirmNewPassword] = useState("");
-
-  const [msg, setMsg] = useState("");
-  const [error, setError] = useState("");
-
-  const hasPasswordFields =
-    currentPassword.trim() || newPassword.trim() || confirmNewPassword.trim();
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function loadMe() {
-      setLoading(true);
-      setError("");
-      setMsg("");
-
-      try {
-        const data = (await refreshMe?.()) ?? null;
-        if (!mounted) return;
-
-        setName(data?.name ?? "");
-        setEmail(data?.email ?? "");
-      } catch (e) {
-        if (!mounted) return;
-
-        if (e?.response?.status === 401) {
-          logout?.();
-          return;
-        }
-
-        if (user) {
-          setName(user.name ?? "");
-          setEmail(user.email ?? "");
-        } else {
-          setError(
-            e?.response?.data?.message || "Nao foi possivel carregar seus dados."
-          );
-        }
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-
-    loadMe();
-    return () => {
-      mounted = false;
-    };
-  }, [refreshMe, logout]);
 
   function validateProfile() {
     if (!name.trim()) return "Nome e obrigatorio.";
@@ -264,12 +255,19 @@ export default function EditProfile() {
 
     if (!currentPassword.trim()) return "Informe sua senha atual.";
     if (!newPassword.trim()) return "Informe a nova senha.";
-    if (newPassword.trim().length < 6)
-      return "A nova senha deve ter pelo menos 6 caracteres.";
-    if (newPassword !== confirmNewPassword)
-      return "A confirmacao da nova senha nao confere.";
-    if (currentPassword === newPassword)
-      return "A nova senha deve ser diferente da senha atual.";
+    if (newPassword.trim().length < 6) return "A nova senha deve ter pelo menos 6 caracteres.";
+    if (newPassword !== confirmNewPassword) return "A confirmacao da nova senha nao confere.";
+    if (currentPassword === newPassword) return "A nova senha deve ser diferente da senha atual.";
+
+    return "";
+  }
+
+  function validateSecretWord() {
+    if (!newSecretWord.trim()) return "Informe a nova palavra secreta.";
+    if (newSecretWord.trim().length < 4) return "A palavra secreta deve ter pelo menos 4 caracteres.";
+    if (newSecretWord.trim() !== confirmNewSecretWord.trim()) {
+      return "A confirmacao da palavra secreta nao confere.";
+    }
 
     return "";
   }
@@ -290,7 +288,6 @@ export default function EditProfile() {
       const payload = { name: name.trim(), email: email.trim() };
       await http.patch("/auth/me", payload);
       await refreshMe?.();
-
       setMsg("Nome e e-mail atualizados com sucesso.");
     } catch (e) {
       if (e?.response?.status === 401) {
@@ -325,12 +322,10 @@ export default function EditProfile() {
 
     setSavingPassword(true);
     try {
-      const payload = {
+      await http.patch("/auth/me/password", {
         currentPassword: currentPassword.trim(),
         newPassword: newPassword.trim(),
-      };
-
-      await http.patch("/auth/me/password", payload);
+      });
 
       setMsg("Senha alterada com sucesso.");
       setCurrentPassword("");
@@ -351,21 +346,54 @@ export default function EditProfile() {
     }
   }
 
+  async function handleChangeSecretWord(e) {
+    e.preventDefault();
+    setMsg("");
+    setError("");
+
+    const v = validateSecretWord();
+    if (v) {
+      setError(v);
+      return;
+    }
+
+    setSavingSecretWord(true);
+    try {
+      await http.patch("/auth/me/secret-word", {
+        newSecretWord: newSecretWord.trim(),
+        confirmNewSecretWord: confirmNewSecretWord.trim(),
+      });
+
+      setMsg("Palavra secreta alterada com sucesso.");
+      setNewSecretWord("");
+      setConfirmNewSecretWord("");
+      setShowSecretWord(false);
+    } catch (e) {
+      if (e?.response?.status === 401) {
+        logout?.();
+        return;
+      }
+
+      setError(
+        e?.response?.data?.message ||
+          "Nao foi possivel alterar a palavra secreta. Tente novamente."
+      );
+    } finally {
+      setSavingSecretWord(false);
+    }
+  }
+
   const avatarDisplayUrl = avatarPreview || avatarUrl;
   const isAvatarBusy = avatarSaving || avatarRemoving;
+  const secretWordInputType = showSecretWord ? "text" : "password";
 
   return (
     <div className="page edit-profile">
-      {/* HEADER */}
       <header className="topbar">
         <div className="topbar-inner">
           <div className="topbar-center">
             <Link className="brand" to="/events">
-              <img
-                className="brand-logo"
-                src="/images/logo-nobg.png"
-                alt="Vou No Volei"
-              />
+              <img className="brand-logo" src="/images/logo-nobg.png" alt="Vou No Volei" />
             </Link>
           </div>
 
@@ -382,30 +410,18 @@ export default function EditProfile() {
                 email={avatarEmail}
                 avatarUrl={avatarUrl}
               />
-              {displayName ? (
-                <span className="profile-label">{displayName}</span>
-              ) : null}
-              <span className={`profile-caret ${menuOpen ? "open" : ""}`}>
-                {"\u25BE"}
-              </span>
+              {displayName ? <span className="profile-label">{displayName}</span> : null}
+              <span className={`profile-caret ${menuOpen ? "open" : ""}`}>{"\u25BE"}</span>
             </button>
 
             {menuOpen && (
               <div className="profile-menu" role="menu">
-                <Link
-                  className="profile-menu-item"
-                  to="/profile/edit"
-                  onClick={() => setMenuOpen(false)}
-                >
+                <Link className="profile-menu-item" to="/profile/edit" onClick={() => setMenuOpen(false)}>
                   Editar perfil
                 </Link>
 
                 {isAdmin && (
-                  <Link
-                    className="profile-menu-item"
-                    to="/admin"
-                    onClick={() => setMenuOpen(false)}
-                  >
+                  <Link className="profile-menu-item" to="/admin" onClick={() => setMenuOpen(false)}>
                     Painel Administrativo
                   </Link>
                 )}
@@ -425,7 +441,6 @@ export default function EditProfile() {
         </div>
       </header>
 
-      {/* CONTEUDO */}
       <div className="container">
         <div className="header-row">
           <h1>Editar Perfil</h1>
@@ -448,12 +463,7 @@ export default function EditProfile() {
               <p className="section-hint">JPG, PNG ou WEBP ate 2MB.</p>
 
               <div className="avatar-row">
-                <Avatar
-                  name={avatarName}
-                  email={avatarEmail}
-                  avatarUrl={avatarDisplayUrl}
-                  size={96}
-                />
+                <Avatar name={avatarName} email={avatarEmail} avatarUrl={avatarDisplayUrl} size={96} />
 
                 <div className="avatar-actions">
                   <input
@@ -527,11 +537,7 @@ export default function EditProfile() {
               </div>
 
               <div className="actions">
-                <button
-                  className="btn btn-primary"
-                  disabled={savingProfile}
-                  type="submit"
-                >
+                <button className="btn btn-primary" disabled={savingProfile} type="submit">
                   {savingProfile ? "Salvando..." : "Salvar nome e e-mail"}
                 </button>
               </div>
@@ -539,9 +545,7 @@ export default function EditProfile() {
 
             <form className="card form" onSubmit={handleChangePassword}>
               <h2 className="section-title">Trocar senha</h2>
-              <p className="section-hint">
-                Preencha apenas se quiser alterar a senha.
-              </p>
+              <p className="section-hint">Preencha apenas se quiser alterar a senha.</p>
 
               <div className="form-grid">
                 <div className="field">
@@ -579,12 +583,58 @@ export default function EditProfile() {
               </div>
 
               <div className="actions">
-                <button
-                  className="btn btn-primary"
-                  disabled={savingPassword}
-                  type="submit"
-                >
+                <button className="btn btn-primary" disabled={savingPassword} type="submit">
                   {savingPassword ? "Salvando..." : "Alterar senha"}
+                </button>
+              </div>
+            </form>
+
+            <form className="card form" onSubmit={handleChangeSecretWord}>
+              <h2 className="section-title">Palavra secreta</h2>
+              <p className="section-hint">
+                A palavra secreta atual fica protegida por hash e nao pode ser exibida novamente. Voce pode definir uma nova a qualquer momento.
+              </p>
+
+              <div className="form-grid">
+                <div className="field">
+                  <label>Palavra secreta atual</label>
+                  <input type="password" value="********" readOnly disabled />
+                </div>
+
+                <div className="field">
+                  <label>Nova palavra secreta</label>
+                  <div className="password-input-wrap">
+                    <input
+                      type={secretWordInputType}
+                      value={newSecretWord}
+                      onChange={(e) => setNewSecretWord(e.target.value)}
+                      placeholder="********"
+                    />
+                    <button
+                      type="button"
+                      className="toggle-visibility-btn"
+                      onClick={() => setShowSecretWord((value) => !value)}
+                      aria-label={showSecretWord ? "Ocultar palavra secreta" : "Mostrar palavra secreta"}
+                    >
+                      {showSecretWord ? "Ocultar" : "Mostrar"}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="field">
+                  <label>Confirmar nova palavra secreta</label>
+                  <input
+                    type={secretWordInputType}
+                    value={confirmNewSecretWord}
+                    onChange={(e) => setConfirmNewSecretWord(e.target.value)}
+                    placeholder="********"
+                  />
+                </div>
+              </div>
+
+              <div className="actions">
+                <button className="btn btn-primary" disabled={savingSecretWord} type="submit">
+                  {savingSecretWord ? "Salvando..." : "Alterar palavra secreta"}
                 </button>
               </div>
             </form>

@@ -8,5 +8,6 @@ public record EventResponse(
         LocalDateTime eventDateTime,
         String location,
         String description,
-        Long createdByUserId
+        Long createdByUserId,
+        String createdByName
 ) {}

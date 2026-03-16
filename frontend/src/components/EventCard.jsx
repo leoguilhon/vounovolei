@@ -23,8 +23,9 @@ function capitalize(text) {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-export default function EventCard({ event }) {
+export default function EventCard({ event, featured = false }) {
   const title = event.title ?? "Evento";
+  const createdByName = event.createdByName?.trim();
   const location = event.location ?? "Local a definir";
   const { date, time } = formatDateTime(event.eventDateTime);
 
@@ -35,7 +36,9 @@ export default function EventCard({ event }) {
 
   return (
     <Link
-      className={`event-card ${event.isPast ? "event-card--past" : ""}`}
+      className={`event-card ${event.isPast ? "event-card--past" : ""} ${
+        featured ? "event-card--featured" : ""
+      }`}
       to={`/events/${event.id}`}
     >
       <div className="event-card-media">
@@ -57,6 +60,10 @@ export default function EventCard({ event }) {
             {participantsCount} {inscritosLabel}
           </div>
         )}
+
+        {featured && (
+          <div className="event-card-featured-tag">Destaque</div>
+        )}
       </div>
 
       <div className="event-card-body">
@@ -74,6 +81,12 @@ export default function EventCard({ event }) {
             )}
           </div>
         </div>
+
+        {createdByName && (
+          <div className="event-card-creator">
+            Criado por {createdByName}
+          </div>
+        )}
 
         <div className="event-card-row">
           <span className="event-card-icon">📍</span>

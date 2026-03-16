@@ -46,7 +46,13 @@ public class SecurityConfig {
                         // ✅ libera imagens de avatar publicamente (para o <img src="..."> do front)
                         .requestMatchers(HttpMethod.GET, "/media/**").permitAll()
 
-                        .requestMatchers("/auth/register", "/auth/login", "/auth/refresh").permitAll()
+                        .requestMatchers(
+                                "/auth/register",
+                                "/auth/login",
+                                "/auth/refresh",
+                                "/auth/forgot-password/validate-secret",
+                                "/auth/forgot-password/reset"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)

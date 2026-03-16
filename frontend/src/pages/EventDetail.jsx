@@ -302,6 +302,10 @@ export default function EventDetail() {
   const title = event?.title ?? "Evento";
   const location = event?.location ?? "Local a definir";
   const description = event?.description ?? "";
+  const createdByName =
+    event?.createdByName?.trim() ||
+    eventBase?.createdByName?.trim() ||
+    "";
   const { date, time } = formatDateTime(event?.eventDateTime);
 
   const weekday = useMemo(() => {
@@ -996,6 +1000,12 @@ async function confirmDelete() {
             )}
           </div>
 
+          {createdByName && (
+            <div className="detail-creator">
+              Criado por {createdByName}
+            </div>
+          )}
+
           <div className="detail-meta-row">
             <div className="detail-meta">
               <span className="pill">{date}</span>
@@ -1190,7 +1200,7 @@ async function confirmDelete() {
                   disabled={ballBusy}
                   title="Inscrever sem bola"
                 >
-                  {ballBusy ? "..." : "Não levo bola"}
+                  {ballBusy ? "..." : "Sim, sem bola"}
                 </button>
 
                 <button

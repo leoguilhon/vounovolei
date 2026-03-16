@@ -1,8 +1,6 @@
 /* src/styles/auth.css
-   ─────────────────────────────────────────
-   Página de autenticação (Login / Registro)
-   Alinhada ao Design System (global.css)
-   ───────────────────────────────────────── */
+   Pagina de autenticacao (Login / Registro / Recuperacao)
+   Alinhada ao Design System (global.css) */
 
 .auth-page {
   min-height: 100vh;
@@ -31,6 +29,13 @@
   letter-spacing: 0.02em;
 }
 
+.auth-subtitle {
+  margin: -10px 0 20px 0;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
 .auth-field {
   display: flex;
   flex-direction: column;
@@ -40,7 +45,6 @@
   color: var(--color-text-secondary);
 }
 
-/* Inputs herdam do global.css */
 .auth-field input {
   width: 100%;
 }
@@ -52,9 +56,16 @@
   gap: 10px;
 }
 
-/* ✅ Botão padronizado
-   - Se seu JSX usa <button className="btn btn-primary">, já fica ok.
-   - Se ainda usa className="auth-button", também não quebra. */
+.auth-label-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.auth-label-row label {
+  margin: 0;
+}
+
 .auth-button {
   width: 100%;
   display: inline-flex;
@@ -83,6 +94,21 @@
   cursor: not-allowed;
 }
 
+.auth-link-button {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: var(--color-primary);
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+}
+
+.auth-link-button:hover {
+  text-decoration: underline;
+}
+
 .auth-error {
   background: var(--color-danger-soft);
   border: 1px solid rgba(180, 35, 24, 0.2);
@@ -94,27 +120,85 @@
   font-weight: 500;
 }
 
+.auth-success {
+  background: rgba(23, 133, 53, 0.12);
+  border: 1px solid rgba(23, 133, 53, 0.18);
+  color: #166534;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
 .auth-footer {
-  margin-top: 18px;
+  margin: 0;
   font-size: 14px;
   text-align: center;
   color: var(--color-text-muted);
 }
 
-.auth-brand{
+.auth-tooltip {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid #94a3b8;
+  color: #1e3a8a;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: help;
+  background: #eff6ff;
+}
+
+.auth-tooltip-bubble {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 220px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-fast);
+  z-index: 2;
+}
+
+.auth-tooltip:hover .auth-tooltip-bubble,
+.auth-tooltip:focus-visible .auth-tooltip-bubble {
+  opacity: 1;
+}
+
+.auth-brand {
   display: flex;
   justify-content: center;
   margin-bottom: 10px;
 }
 
-.auth-brand-logo{
+.auth-brand-logo {
   width: min(260px, 70%);
   height: auto;
   display: block;
 }
 
 @media (max-width: 640px) {
-  .auth-brand-logo{
+  .auth-brand-logo {
     width: min(220px, 75%);
+  }
+
+  .auth-tooltip-bubble {
+    left: 50%;
+    top: calc(100% + 10px);
+    transform: translateX(-50%);
+    width: min(220px, calc(100vw - 64px));
   }
 }

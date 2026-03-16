@@ -1,6 +1,7 @@
 package br.com.vounovolei.api.controller.admin;
 
 import br.com.vounovolei.api.controller.admin.dto.AdminChangePasswordRequest;
+import br.com.vounovolei.api.controller.admin.dto.AdminChangeSecretWordRequest;
 import br.com.vounovolei.api.controller.admin.dto.AdminEventResponse;
 import br.com.vounovolei.api.controller.admin.dto.AdminUpdateEventRequest;
 import br.com.vounovolei.api.controller.admin.dto.AdminUpdateUserRequest;
@@ -43,6 +44,15 @@ public class AdminController {
             @RequestBody @Valid AdminChangePasswordRequest req
     ) {
         adminService.changeUserPassword(id, req.newPassword());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/users/{id}/secret-word")
+    public ResponseEntity<Void> changeUserSecretWord(
+            @PathVariable Long id,
+            @RequestBody @Valid AdminChangeSecretWordRequest req
+    ) {
+        adminService.changeUserSecretWord(id, req.newSecretWord());
         return ResponseEntity.noContent().build();
     }
 

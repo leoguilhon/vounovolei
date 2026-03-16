@@ -19,11 +19,7 @@ async function refreshAccessToken() {
     if (!refreshToken) throw new Error("REFRESH_TOKEN_AUSENTE");
 
     refreshPromise = http
-      .post(
-        "/auth/refresh",
-        { refreshToken },
-        { skipAuthRefresh: true }
-      )
+      .post("/auth/refresh", { refreshToken }, { skipAuthRefresh: true })
       .then(({ data }) => {
         const nextAccess = data?.accessToken || data?.token;
         const nextRefresh = data?.refreshToken;
@@ -54,7 +50,8 @@ http.interceptors.response.use(
     const isAuthEndpoint =
       requestUrl.includes("/auth/login") ||
       requestUrl.includes("/auth/register") ||
-      requestUrl.includes("/auth/refresh");
+      requestUrl.includes("/auth/refresh") ||
+      requestUrl.includes("/auth/forgot-password/");
 
     const shouldTryRefresh = status === 401 || status === 403;
 

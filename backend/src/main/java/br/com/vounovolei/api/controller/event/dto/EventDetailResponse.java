@@ -9,6 +9,8 @@ public record EventDetailResponse(
         LocalDateTime eventDateTime,
         String location,
         String description,
+        Long createdByUserId,
+        String createdByName,
         Long participantsCount,
         List<EventParticipantResponse> participants
 ) {}

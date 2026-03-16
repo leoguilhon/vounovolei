@@ -48,6 +48,8 @@ public class AdminService {
         LinkedHashMap<Long, User> merged = new LinkedHashMap<>();
         userRepository.findByNameContainingIgnoreCaseOrderByIdAsc(query)
                 .forEach(u -> merged.put(u.getId(), u));
+        userRepository.findByEmailContainingIgnoreCaseOrderByIdAsc(query)
+                .forEach(u -> merged.put(u.getId(), u));
 
         Long parsedId = tryParseId(query);
         if (parsedId != null) {
@@ -112,6 +114,13 @@ public class AdminService {
     public void changeUserPassword(Long id, String newPassword) {
         User user = findUserOrThrow(id);
         user.setPassword(encodeValidatedPassword(newPassword == null ? "" : newPassword.trim()));
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void changeUserSecretWord(Long id, String newSecretWord) {
+        User user = findUserOrThrow(id);
+        user.setSecretWordHash(encodeValidatedSecretWord(newSecretWord == null ? "" : newSecretWord.trim()));
         userRepository.save(user);
     }
 
@@ -242,5 +251,15 @@ public class AdminService {
             throw new ResponseStatusException(BAD_REQUEST, "A senha deve ter pelo menos 6 caracteres");
         }
         return passwordEncoder.encode(rawPassword);
+    }
+
+    private String encodeValidatedSecretWord(String rawSecretWord) {
+        if (rawSecretWord == null || rawSecretWord.isBlank()) {
+            throw new ResponseStatusException(BAD_REQUEST, "A nova palavra secreta é obrigatória");
+        }
+        if (rawSecretWord.length() < 4) {
+            throw new ResponseStatusException(BAD_REQUEST, "A palavra secreta deve ter pelo menos 4 caracteres");
+        }
+        return passwordEncoder.encode(rawSecretWord);
     }
 }

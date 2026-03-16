@@ -93,6 +93,12 @@ public class EventRegistrationService {
         Event e = eventRepository.findById(eventId)
                 .orElseThrow(() -> new IllegalArgumentException("EVENT_NOT_FOUND"));
 
+        String createdByName = e.getCreatedByUserId() == null
+                ? null
+                : userRepository.findById(e.getCreatedByUserId())
+                        .map(User::getName)
+                        .orElse(null);
+
         List<EventParticipantResponse> participants = listParticipants(eventId);
         long count = participants.size();
 
@@ -102,6 +108,8 @@ public class EventRegistrationService {
                 e.getEventDateTime(),
                 e.getLocation(),
                 e.getDescription(),
+                e.getCreatedByUserId(),
+                createdByName,
                 count,
                 participants
         );

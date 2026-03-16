@@ -35,8 +35,22 @@ export function AuthProvider({ children }) {
     return accessToken;
   }
 
-  async function register({ name, email, password }) {
-    const { data } = await http.post("/auth/register", { name, email, password });
+  async function register({
+    name,
+    email,
+    password,
+    confirmPassword,
+    secretWord,
+    confirmSecretWord,
+  }) {
+    const { data } = await http.post("/auth/register", {
+      name,
+      email,
+      password,
+      confirmPassword,
+      secretWord,
+      confirmSecretWord,
+    });
 
     const accessToken =
       data?.token || data?.accessToken || data?.jwt || data?.access_token;

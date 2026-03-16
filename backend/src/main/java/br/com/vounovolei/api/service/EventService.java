@@ -5,6 +5,7 @@ import br.com.vounovolei.api.controller.event.dto.EventResponse;
 import br.com.vounovolei.api.controller.event.dto.UpdateEventRequest;
 import br.com.vounovolei.api.domain.event.Event;
 import br.com.vounovolei.api.repository.EventRepository;
+import br.com.vounovolei.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.util.List;
 public class EventService {
 
     private final EventRepository eventRepository;
+    private final UserRepository userRepository;
     private final RateLimitService rateLimitService;
 
     public EventResponse create(CreateEventRequest req, Long createdByUserId, boolean isAdmin) {
@@ -87,13 +89,20 @@ public class EventService {
     }
 
     private EventResponse toResponse(Event e) {
+        String createdByName = e.getCreatedByUserId() == null
+                ? null
+                : userRepository.findById(e.getCreatedByUserId())
+                        .map(user -> user.getName())
+                        .orElse(null);
+
         return new EventResponse(
                 e.getId(),
                 e.getTitle(),
                 e.getEventDateTime(),
                 e.getLocation(),
                 e.getDescription(),
-                e.getCreatedByUserId()
+                e.getCreatedByUserId(),
+                createdByName
         );
     }
 }
