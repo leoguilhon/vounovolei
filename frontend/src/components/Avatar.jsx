@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import "../styles/avatar.css";
 
 const MAX_INITIALS = 2;
@@ -39,11 +39,7 @@ function resolveAvatarSrc(avatarUrl) {
 }
 
 export default function Avatar({ name, email, avatarUrl, size, className }) {
-  const [imgError, setImgError] = useState(false);
-
-  useEffect(() => {
-    setImgError(false);
-  }, [avatarUrl]);
+  const [failedSrc, setFailedSrc] = useState("");
 
   const initials = useMemo(() => {
     const fromName = getInitialsFromName(name);
@@ -56,6 +52,7 @@ export default function Avatar({ name, email, avatarUrl, size, className }) {
   }, [name, email]);
 
   const src = useMemo(() => resolveAvatarSrc(avatarUrl), [avatarUrl]);
+  const hasImage = !!src && failedSrc !== src;
 
   const style = useMemo(() => {
     if (!size) return undefined;
@@ -70,12 +67,12 @@ export default function Avatar({ name, email, avatarUrl, size, className }) {
       role="img"
       aria-label={name || email || "Avatar"}
     >
-      {src && !imgError ? (
+      {hasImage ? (
         <img
           className="avatar-img"
           src={src}
           alt={name || email || "Avatar"}
-          onError={() => setImgError(true)}
+          onError={() => setFailedSrc(src)}
         />
       ) : (
         <span className="avatar-fallback">{initials}</span>

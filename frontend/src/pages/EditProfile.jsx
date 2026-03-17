@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../auth/useAuth";
 import http from "../api/http";
 import Avatar from "../components/Avatar";
 import "../styles/topbar.css";
@@ -67,7 +67,7 @@ export default function EditProfile() {
     return () => {
       mounted = false;
     };
-  }, [refreshMe, logout]);
+  }, [refreshMe, logout, user]);
 
   const rawName = useMemo(() => user?.name?.trim() || me?.name?.trim() || "", [user?.name, me?.name]);
   const displayName = useMemo(() => (rawName ? capitalizeFirst(rawName) : ""), [rawName]);
@@ -145,7 +145,7 @@ export default function EditProfile() {
     return () => {
       mounted = false;
     };
-  }, [refreshMe, logout]);
+  }, [refreshMe, logout, user]);
 
   function resetAvatarSelection() {
     setAvatarFile(null);

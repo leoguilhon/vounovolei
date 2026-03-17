@@ -28,6 +28,12 @@ public class Event {
     @Column(nullable = false, length = 120)
     private String location;
 
+    @Column(length = 120)
+    private String city;
+
+    @Column(length = 2, columnDefinition = "CHAR(2)")
+    private String state;
+
     @Column
     private String description;
 

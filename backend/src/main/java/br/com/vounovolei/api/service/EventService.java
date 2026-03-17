@@ -20,6 +20,7 @@ public class EventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final RateLimitService rateLimitService;
+    private final EventWeatherService eventWeatherService;
 
     public EventResponse create(CreateEventRequest req, Long createdByUserId, boolean isAdmin) {
         if (!isAdmin) {
@@ -30,6 +31,8 @@ public class EventService {
                 .title(req.title().trim())
                 .eventDateTime(req.eventDateTime())
                 .location(req.location().trim())
+                .city(req.city().trim())
+                .state(req.state().trim().toUpperCase())
                 .description(req.description())
                 .createdByUserId(createdByUserId)
                 .createdAt(Instant.now())
@@ -67,6 +70,8 @@ public class EventService {
         e.setTitle(req.title().trim());
         e.setEventDateTime(req.eventDateTime());
         e.setLocation(req.location().trim());
+        e.setCity(req.city().trim());
+        e.setState(req.state().trim().toUpperCase());
         e.setDescription(req.description());
         e.setUpdatedAt(Instant.now());
 
@@ -100,6 +105,9 @@ public class EventService {
                 e.getTitle(),
                 e.getEventDateTime(),
                 e.getLocation(),
+                e.getCity(),
+                e.getState(),
+                eventWeatherService.resolve(e.getEventDateTime(), e.getCity(), e.getState()),
                 e.getDescription(),
                 e.getCreatedByUserId(),
                 createdByName

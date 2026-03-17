@@ -1,8 +1,11 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import http from "../api/http";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../auth/useAuth";
 import Avatar from "../components/Avatar";
+import BrazilCityField from "../components/BrazilCityField";
+import EventWeatherSummary from "../components/EventWeatherSummary";
+import { formatBrazilianCity } from "../utils/brazilianCities";
 import "../styles/topbar.css";
 import "../styles/eventDetail.css";
 
@@ -245,11 +248,13 @@ export default function EventDetail() {
     return null;
   }, [user?.id, jwtSub]);
 
-  function saveDrawState(next) {
+  const saveDrawState = useCallback((next) => {
     try {
       localStorage.setItem(drawStorageKey(id), JSON.stringify(next));
-    } catch {}
-  }
+    } catch {
+      return;
+    }
+  }, [id]);
 
   function readDrawState() {
     try {
@@ -301,6 +306,8 @@ export default function EventDetail() {
 
   const title = event?.title ?? "Evento";
   const location = event?.location ?? "Local a definir";
+  const cityLabel = formatBrazilianCity(event?.city, event?.state);
+  const weather = event?.weather ?? null;
   const description = event?.description ?? "";
   const createdByName =
     event?.createdByName?.trim() ||
@@ -453,13 +460,19 @@ export default function EventDetail() {
   const [editTitle, setEditTitle] = useState("");
   const [editEventDateTime, setEditEventDateTime] = useState("");
   const [editLocation, setEditLocation] = useState("");
+  const [editCity, setEditCity] = useState("");
+  const [editState, setEditState] = useState("");
+  const [editCityError, setEditCityError] = useState("");
   const [editDescription, setEditDescription] = useState("");
 
   function openEdit() {
     setEditError("");
+    setEditCityError("");
     setEditTitle(event?.title ?? "");
     setEditEventDateTime(toDatetimeLocalValue(event?.eventDateTime));
     setEditLocation(event?.location ?? "");
+    setEditCity(event?.city ?? "");
+    setEditState(event?.state ?? "");
     setEditDescription(event?.description ?? "");
     setIsEditOpen(true);
   }
@@ -475,12 +488,21 @@ export default function EventDetail() {
 
     setEditBusy(true);
     setEditError("");
+    setEditCityError("");
+
+    if (!editCity || !editState) {
+      setEditCityError("Selecione uma cidade da lista de municípios brasileiros.");
+      setEditBusy(false);
+      return;
+    }
 
     try {
       const body = {
         title: String(editTitle ?? "").trim(),
         eventDateTime: normalizeDateTimeLocal(editEventDateTime),
         location: String(editLocation ?? "").trim(),
+        city: String(editCity ?? "").trim(),
+        state: String(editState ?? "").trim(),
         description: String(editDescription ?? "").trim() || null,
       };
 
@@ -646,13 +668,11 @@ async function confirmDelete() {
     if (!isDrawOpen) return;
     const next = { drawMode, teamsCount, selectedIds, teams };
     saveDrawState(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDrawOpen, drawMode, teamsCount, selectedIds, teams]);
+  }, [isDrawOpen, drawMode, teamsCount, selectedIds, teams, saveDrawState]);
 
   useEffect(() => {
     if (!isDrawOpen) return;
     setTeams([]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDrawOpen]);
 
   useEffect(() => {
@@ -1011,6 +1031,7 @@ async function confirmDelete() {
               <span className="pill">{date}</span>
               <span className="pill">{time}</span>
               <span className="pill pill-sand">{location}</span>
+              <span className="pill">{cityLabel}</span>
             </div>
 
             <div className="detail-meta-badges">
@@ -1024,6 +1045,8 @@ async function confirmDelete() {
               )}
             </div>
           </div>
+
+          <EventWeatherSummary weather={weather} />
 
           {description && (
             <div className="detail-section">
@@ -1275,6 +1298,18 @@ async function confirmDelete() {
                     required
                   />
                 </div>
+
+                <BrazilCityField
+                  city={editCity}
+                  state={editState}
+                  required
+                  error={editCityError}
+                  onChange={(option) => {
+                    setEditCity(option?.name ?? "");
+                    setEditState(option?.state ?? "");
+                    setEditCityError("");
+                  }}
+                />
 
                 <div className="form-field">
                   <label>Descrição (opcional)</label>
@@ -1538,3 +1573,6 @@ async function confirmDelete() {
     </div>
   );
 }
+
+
+

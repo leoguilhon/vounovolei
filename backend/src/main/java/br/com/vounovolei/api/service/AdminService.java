@@ -176,6 +176,8 @@ public class AdminService {
         event.setTitle(req.title().trim());
         event.setEventDateTime(req.eventDateTime());
         event.setLocation(req.location().trim());
+        event.setCity(req.city().trim());
+        event.setState(req.state().trim().toUpperCase());
         event.setDescription(req.description());
         event.setCreatedByUserId(req.createdByUserId());
         event.setUpdatedAt(Instant.now());
@@ -216,6 +218,8 @@ public class AdminService {
                 event.getTitle(),
                 event.getEventDateTime(),
                 event.getLocation(),
+                event.getCity(),
+                event.getState(),
                 event.getDescription(),
                 event.getCreatedByUserId(),
                 event.getCreatedAt(),

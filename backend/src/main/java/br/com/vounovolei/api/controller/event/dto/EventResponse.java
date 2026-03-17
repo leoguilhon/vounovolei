@@ -7,6 +7,9 @@ public record EventResponse(
         String title,
         LocalDateTime eventDateTime,
         String location,
+        String city,
+        String state,
+        EventWeatherResponse weather,
         String description,
         Long createdByUserId,
         String createdByName

@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../auth/useAuth";
 import http from "../api/http";
 import Avatar from "../components/Avatar";
+import BrazilCityField from "../components/BrazilCityField";
+import { formatBrazilianCity } from "../utils/brazilianCities";
 import "../styles/topbar.css";
 import "../styles/admin-panel.css";
 
@@ -60,7 +62,7 @@ export default function AdminPanel() {
   const [userForm, setUserForm] = useState({ name: "", email: "", role: "USER" });
   const [passwordForm, setPasswordForm] = useState({ newPassword: "", confirmPassword: "" });
   const [secretWordForm, setSecretWordForm] = useState({ newSecretWord: "", confirmSecretWord: "" });
-  const [eventForm, setEventForm] = useState({ title: "", eventDateTime: "", location: "", description: "", createdByUserId: "" });
+  const [eventForm, setEventForm] = useState({ title: "", eventDateTime: "", location: "", city: "", state: "", description: "", createdByUserId: "" });
 
   const resolvedUser = user ?? me;
   const isAdmin = isAdminUser(resolvedUser);
@@ -105,7 +107,7 @@ export default function AdminPanel() {
     } catch (err) {
       if (err?.response?.status === 401) return logout?.();
       if (err?.response?.status === 403) return navigate("/events", { replace: true });
-      setUsersError(err?.response?.data?.message || "Falha ao carregar usuários.");
+      setUsersError(err?.response?.data?.message || "Falha ao carregar usuÃ¡rios.");
     } finally {
       setUsersLoading(false);
     }
@@ -166,7 +168,8 @@ export default function AdminPanel() {
           const id = String(item.id ?? "");
           const title = String(item.title ?? "").toLowerCase();
           const location = String(item.location ?? "").toLowerCase();
-          return id.includes(normalizedQuery) || title.includes(normalizedQuery) || location.includes(normalizedQuery);
+          const city = formatBrazilianCity(item.city, item.state).toLowerCase();
+          return id.includes(normalizedQuery) || title.includes(normalizedQuery) || location.includes(normalizedQuery) || city.includes(normalizedQuery);
         })
       : filteredByPeriod;
     return [...filtered].sort((a, b) => {
@@ -206,6 +209,8 @@ export default function AdminPanel() {
       title: item.title ?? "",
       eventDateTime: toDatetimeLocalValue(item.eventDateTime),
       location: item.location ?? "",
+      city: item.city ?? "",
+      state: item.state ?? "",
       description: item.description ?? "",
       createdByUserId: String(item.createdByUserId ?? ""),
     });
@@ -218,10 +223,10 @@ export default function AdminPanel() {
     try {
       await http.put(`/admin/users/${id}`, { name: userForm.name.trim(), email: userForm.email.trim(), role: userForm.role });
       setEditingUserId(null);
-      setFlashMessage("Usuário atualizado com sucesso.");
+      setFlashMessage("UsuÃ¡rio atualizado com sucesso.");
       await loadUsers();
     } catch (err) {
-      setSaveError(err?.response?.data?.message || "Falha ao atualizar usuário.");
+      setSaveError(err?.response?.data?.message || "Falha ao atualizar usuÃ¡rio.");
     } finally {
       setSaveUserBusy(false);
     }
@@ -231,7 +236,7 @@ export default function AdminPanel() {
     const { newPassword, confirmPassword } = passwordForm;
     if (!newPassword.trim()) return setSaveError("Informe a nova senha.");
     if (newPassword.trim().length < 6) return setSaveError("A senha deve ter pelo menos 6 caracteres.");
-    if (newPassword !== confirmPassword) return setSaveError("A confirmação da senha não confere.");
+    if (newPassword !== confirmPassword) return setSaveError("A confirmaÃ§Ã£o da senha nÃ£o confere.");
     setSavePasswordBusy(true);
     resetFeedback();
     try {
@@ -250,7 +255,7 @@ export default function AdminPanel() {
     const { newSecretWord, confirmSecretWord } = secretWordForm;
     if (!newSecretWord.trim()) return setSaveError("Informe a nova palavra secreta.");
     if (newSecretWord.trim().length < 4) return setSaveError("A palavra secreta deve ter pelo menos 4 caracteres.");
-    if (newSecretWord !== confirmSecretWord) return setSaveError("A confirmação da palavra secreta não confere.");
+    if (newSecretWord !== confirmSecretWord) return setSaveError("A confirmaÃ§Ã£o da palavra secreta nÃ£o confere.");
     setSavePasswordBusy(true);
     resetFeedback();
     try {
@@ -267,6 +272,10 @@ export default function AdminPanel() {
 
   async function saveEvent(id) {
     if (saveEventBusy) return;
+    if (!eventForm.city.trim() || !eventForm.state.trim()) {
+      setSaveError("Selecione uma cidade da lista de municÃ­pios brasileiros.");
+      return;
+    }
     setSaveEventBusy(true);
     resetFeedback();
     try {
@@ -274,6 +283,8 @@ export default function AdminPanel() {
         title: eventForm.title.trim(),
         eventDateTime: normalizeDateTimeLocal(eventForm.eventDateTime),
         location: eventForm.location.trim(),
+        city: eventForm.city.trim(),
+        state: eventForm.state.trim(),
         description: eventForm.description.trim() || null,
         createdByUserId: Number(eventForm.createdByUserId),
       });
@@ -293,11 +304,11 @@ export default function AdminPanel() {
     try {
       await http.delete(`/admin/users/${id}`);
       setDeleteConfirm(null);
-      setFlashMessage("Usuário removido com sucesso.");
+      setFlashMessage("UsuÃ¡rio removido com sucesso.");
       await loadUsers();
       await loadEvents();
     } catch (err) {
-      setSaveError(err?.response?.data?.message || "Falha ao remover usuário.");
+      setSaveError(err?.response?.data?.message || "Falha ao remover usuÃ¡rio.");
     } finally {
       setDeleteBusyId(null);
     }
@@ -325,13 +336,13 @@ export default function AdminPanel() {
       <header className="topbar">
         <div className="topbar-inner">
           <div className="topbar-center">
-            <Link className="brand" to="/events"><img className="brand-logo" src="/images/logo-nobg.png" alt="Vou No Vôlei" /></Link>
+            <Link className="brand" to="/events"><img className="brand-logo" src="/images/logo-nobg.png" alt="Vou No VÃ´lei" /></Link>
           </div>
           <div className="topbar-right" ref={menuRef}>
             <button className="profile-btn" onClick={() => setMenuOpen((v) => !v)} aria-haspopup="menu" aria-expanded={menuOpen}>
               <Avatar className="profile-avatar" name={resolvedUser?.name} email={resolvedUser?.email} avatarUrl={resolvedUser?.avatarUrl} />
               {displayName ? <span className="profile-label">{displayName}</span> : null}
-              <span className={`profile-caret ${menuOpen ? "open" : ""}`}>▾</span>
+              <span className={`profile-caret ${menuOpen ? "open" : ""}`}>â–¾</span>
             </button>
             {menuOpen && <div className="profile-menu" role="menu">
               <Link className="profile-menu-item" to="/profile/edit" onClick={() => setMenuOpen(false)}>Editar perfil</Link>
@@ -343,25 +354,25 @@ export default function AdminPanel() {
       </header>
       <main className="admin-main">
         <section className="admin-hero">
-          <div><p className="admin-eyebrow">Operação</p><h1>Painel Administrativo</h1><p className="admin-subtitle">Visão geral da plataforma com filtros rápidos, ordenação e ações diretas.</p></div>
+          <div><p className="admin-eyebrow">OperaÃ§Ã£o</p><h1>Painel Administrativo</h1><p className="admin-subtitle">VisÃ£o geral da plataforma com filtros rÃ¡pidos, ordenaÃ§Ã£o e aÃ§Ãµes diretas.</p></div>
           <Link className="admin-back" to="/events">Voltar para eventos</Link>
         </section>
         <section className="admin-stats-grid">
-          <article className="admin-stat-card"><span className="admin-stat-label">Usuários</span><strong>{stats.totalUsers}</strong><small>Total cadastrado</small></article>
+          <article className="admin-stat-card"><span className="admin-stat-label">UsuÃ¡rios</span><strong>{stats.totalUsers}</strong><small>Total cadastrado</small></article>
           <article className="admin-stat-card"><span className="admin-stat-label">Admins</span><strong>{stats.totalAdmins}</strong><small>Acesso administrativo</small></article>
           <article className="admin-stat-card"><span className="admin-stat-label">Eventos</span><strong>{stats.totalEvents}</strong><small>No sistema</small></article>
-          <article className="admin-stat-card accent"><span className="admin-stat-label">Próximos</span><strong>{stats.upcomingEvents}</strong><small>Eventos futuros</small></article>
+          <article className="admin-stat-card accent"><span className="admin-stat-label">PrÃ³ximos</span><strong>{stats.upcomingEvents}</strong><small>Eventos futuros</small></article>
         </section>
         {flashMessage ? <div className="admin-alert success">{flashMessage}</div> : null}
         {saveError ? <div className="admin-alert error">{saveError}</div> : null}
         <section className="admin-tabs">
-          <button type="button" className={tab === "users" ? "active" : ""} onClick={() => setTab("users")}>Usuários</button>
+          <button type="button" className={tab === "users" ? "active" : ""} onClick={() => setTab("users")}>UsuÃ¡rios</button>
           <button type="button" className={tab === "events" ? "active" : ""} onClick={() => setTab("events")}>Eventos</button>
         </section>
         {tab === "users" && (
           <section className="admin-section">
             <div className="admin-section-header">
-              <div><h2>Usuários</h2><p>{filteredUsers.length} resultado(s)</p></div>
+              <div><h2>UsuÃ¡rios</h2><p>{filteredUsers.length} resultado(s)</p></div>
               <form className="admin-toolbar" onSubmit={(e) => { e.preventDefault(); loadUsers(usersQuery); }}>
                 <input value={usersQuery} onChange={(e) => setUsersQuery(e.target.value)} placeholder="Buscar por ID, nome ou e-mail" />
                 <select value={userRoleFilter} onChange={(e) => setUserRoleFilter(e.target.value)}><option value="ALL">Todas as roles</option><option value="USER">USER</option><option value="ADMIN">ADMIN</option></select>
@@ -369,7 +380,7 @@ export default function AdminPanel() {
                 <button type="submit">Buscar</button><button type="button" onClick={() => loadUsers(usersQuery)}>Atualizar</button><button type="button" className="secondary" onClick={() => { setUsersQuery(""); setUserRoleFilter("ALL"); setUserSort("id"); loadUsers(""); }}>Limpar</button>
               </form>
             </div>
-            {usersLoading ? <p>Carregando usuários...</p> : null}
+            {usersLoading ? <p>Carregando usuÃ¡rios...</p> : null}
             {usersError ? <div className="admin-alert error">{usersError}</div> : null}
             {!usersLoading && !usersError && <TableUsers items={filteredUsers} onEdit={openUserEditor} onPassword={openPasswordEditor} onSecret={openSecretWordEditor} onDelete={(item) => setDeleteConfirm({ type: "user", id: item.id, name: item.name, email: item.email })} deleteBusyId={deleteBusyId} />}
           </section>
@@ -380,44 +391,48 @@ export default function AdminPanel() {
               <div><h2>Eventos</h2><p>{filteredEvents.length} resultado(s)</p></div>
               <form className="admin-toolbar" onSubmit={(e) => { e.preventDefault(); loadEvents(eventsQuery); }}>
                 <input value={eventsQuery} onChange={(e) => setEventsQuery(e.target.value)} placeholder="Buscar por ID ou nome do evento" />
-                <select value={eventPeriodFilter} onChange={(e) => setEventPeriodFilter(e.target.value)}><option value="ALL">Todos os períodos</option><option value="today">Hoje</option><option value="next7">Próximos 7 dias</option><option value="future">Futuros</option><option value="past">Passados</option></select>
-                <select value={eventSort} onChange={(e) => setEventSort(e.target.value)}><option value="dateAsc">Data crescente</option><option value="dateDesc">Data decrescente</option><option value="title">Título</option></select>
+                <select value={eventPeriodFilter} onChange={(e) => setEventPeriodFilter(e.target.value)}><option value="ALL">Todos os perÃ­odos</option><option value="today">Hoje</option><option value="next7">PrÃ³ximos 7 dias</option><option value="future">Futuros</option><option value="past">Passados</option></select>
+                <select value={eventSort} onChange={(e) => setEventSort(e.target.value)}><option value="dateAsc">Data crescente</option><option value="dateDesc">Data decrescente</option><option value="title">TÃ­tulo</option></select>
                 <button type="submit">Buscar</button><button type="button" onClick={() => loadEvents(eventsQuery)}>Atualizar</button><button type="button" className="secondary" onClick={() => { setEventsQuery(""); setEventPeriodFilter("ALL"); setEventSort("dateAsc"); loadEvents(""); }}>Limpar</button>
               </form>
             </div>
             {eventsLoading ? <p>Carregando eventos...</p> : null}
             {eventsError ? <div className="admin-alert error">{eventsError}</div> : null}
-            {!eventsLoading && !eventsError && <TableEvents items={filteredEvents} onEdit={openEventEditor} onDelete={(item) => setDeleteConfirm({ type: "event", id: item.id, title: item.title, location: item.location })} deleteBusyId={deleteBusyId} />}
+            {!eventsLoading && !eventsError && <TableEvents items={filteredEvents} onEdit={openEventEditor} onDelete={(item) => setDeleteConfirm({ type: "event", id: item.id, title: item.title, location: item.location, cityLabel: formatBrazilianCity(item.city, item.state) })} deleteBusyId={deleteBusyId} />}
           </section>
         )}
       </main>
-      {editingUserId != null && <Modal title={`Atualizar usuário #${editingUserId}`} actions={<><button type="button" onClick={() => saveUser(editingUserId)} disabled={saveUserBusy}>{saveUserBusy ? "Salvando..." : "Salvar"}</button><button type="button" onClick={() => setEditingUserId(null)} disabled={saveUserBusy}>Cancelar</button></>}>
+      {editingUserId != null && <Modal title={`Atualizar usuÃ¡rio #${editingUserId}`} actions={<><button type="button" onClick={() => saveUser(editingUserId)} disabled={saveUserBusy}>{saveUserBusy ? "Salvando..." : "Salvar"}</button><button type="button" onClick={() => setEditingUserId(null)} disabled={saveUserBusy}>Cancelar</button></>}>
         <div className="admin-form-grid"><label>Nome<input value={userForm.name} onChange={(e) => setUserForm((v) => ({ ...v, name: e.target.value }))} /></label><label>E-mail<input value={userForm.email} onChange={(e) => setUserForm((v) => ({ ...v, email: e.target.value }))} /></label><label>Role<select value={userForm.role} onChange={(e) => setUserForm((v) => ({ ...v, role: e.target.value }))}><option value="USER">USER</option><option value="ADMIN">ADMIN</option></select></label></div>
       </Modal>}
-      {changingPasswordUserId != null && <Modal title={`Trocar senha do usuário #${changingPasswordUserId}`} actions={<><button type="button" onClick={() => changePassword(changingPasswordUserId)} disabled={savePasswordBusy}>{savePasswordBusy ? "Salvando..." : "Salvar senha"}</button><button type="button" onClick={() => setChangingPasswordUserId(null)} disabled={savePasswordBusy}>Cancelar</button></>}>
+      {changingPasswordUserId != null && <Modal title={`Trocar senha do usuÃ¡rio #${changingPasswordUserId}`} actions={<><button type="button" onClick={() => changePassword(changingPasswordUserId)} disabled={savePasswordBusy}>{savePasswordBusy ? "Salvando..." : "Salvar senha"}</button><button type="button" onClick={() => setChangingPasswordUserId(null)} disabled={savePasswordBusy}>Cancelar</button></>}>
         <div className="admin-form-grid"><label>Nova senha<input type="password" value={passwordForm.newPassword} onChange={(e) => setPasswordForm((v) => ({ ...v, newPassword: e.target.value }))} /></label><label>Confirmar nova senha<input type="password" value={passwordForm.confirmPassword} onChange={(e) => setPasswordForm((v) => ({ ...v, confirmPassword: e.target.value }))} /></label></div>
       </Modal>}
-      {changingSecretWordUserId != null && <Modal title={`Trocar palavra secreta do usuário #${changingSecretWordUserId}`} actions={<><button type="button" onClick={() => changeSecretWord(changingSecretWordUserId)} disabled={savePasswordBusy}>{savePasswordBusy ? "Salvando..." : "Salvar palavra secreta"}</button><button type="button" onClick={() => setChangingSecretWordUserId(null)} disabled={savePasswordBusy}>Cancelar</button></>}>
+      {changingSecretWordUserId != null && <Modal title={`Trocar palavra secreta do usuÃ¡rio #${changingSecretWordUserId}`} actions={<><button type="button" onClick={() => changeSecretWord(changingSecretWordUserId)} disabled={savePasswordBusy}>{savePasswordBusy ? "Salvando..." : "Salvar palavra secreta"}</button><button type="button" onClick={() => setChangingSecretWordUserId(null)} disabled={savePasswordBusy}>Cancelar</button></>}>
         <div className="admin-form-grid"><label>Nova palavra secreta<input type="password" value={secretWordForm.newSecretWord} onChange={(e) => setSecretWordForm((v) => ({ ...v, newSecretWord: e.target.value }))} /></label><label>Confirmar nova palavra secreta<input type="password" value={secretWordForm.confirmSecretWord} onChange={(e) => setSecretWordForm((v) => ({ ...v, confirmSecretWord: e.target.value }))} /></label></div>
       </Modal>}
       {editingEventId != null && <Modal title={`Atualizar evento #${editingEventId}`} actions={<><button type="button" onClick={() => saveEvent(editingEventId)} disabled={saveEventBusy}>{saveEventBusy ? "Salvando..." : "Salvar"}</button><button type="button" onClick={() => setEditingEventId(null)} disabled={saveEventBusy}>Cancelar</button></>}>
-        <div className="admin-form-grid"><label>Título<input value={eventForm.title} onChange={(e) => setEventForm((v) => ({ ...v, title: e.target.value }))} /></label><label>Data e hora<input type="datetime-local" value={eventForm.eventDateTime} onChange={(e) => setEventForm((v) => ({ ...v, eventDateTime: e.target.value }))} /></label><label>Local<input value={eventForm.location} onChange={(e) => setEventForm((v) => ({ ...v, location: e.target.value }))} /></label><label>ID do criador<input value={eventForm.createdByUserId} onChange={(e) => setEventForm((v) => ({ ...v, createdByUserId: e.target.value }))} /></label><label className="full">Descrição<textarea rows={4} value={eventForm.description} onChange={(e) => setEventForm((v) => ({ ...v, description: e.target.value }))} /></label></div>
+        <div className="admin-form-grid"><label>Título<input value={eventForm.title} onChange={(e) => setEventForm((v) => ({ ...v, title: e.target.value }))} /></label><label>Data e hora<input type="datetime-local" value={eventForm.eventDateTime} onChange={(e) => setEventForm((v) => ({ ...v, eventDateTime: e.target.value }))} /></label><label>Local<input value={eventForm.location} onChange={(e) => setEventForm((v) => ({ ...v, location: e.target.value }))} /></label><div className="full"><BrazilCityField city={eventForm.city} state={eventForm.state} required onChange={(option) => setEventForm((v) => ({ ...v, city: option?.name ?? "", state: option?.state ?? "" }))} /></div><label>ID do criador<input value={eventForm.createdByUserId} onChange={(e) => setEventForm((v) => ({ ...v, createdByUserId: e.target.value }))} /></label><label className="full">Descrição<textarea rows={4} value={eventForm.description} onChange={(e) => setEventForm((v) => ({ ...v, description: e.target.value }))} /></label></div>
       </Modal>}
-      {deleteConfirm && <Modal title={deleteConfirm.type === "user" ? `Remover usuário #${deleteConfirm.id}` : `Remover evento #${deleteConfirm.id}`} actions={<><button type="button" className="danger" onClick={() => deleteConfirm.type === "user" ? removeUser(deleteConfirm.id) : removeEvent(deleteConfirm.id)} disabled={deleteBusyId != null}>{deleteBusyId ? "Removendo..." : "Sim, remover"}</button><button type="button" onClick={() => setDeleteConfirm(null)} disabled={deleteBusyId != null}>Cancelar</button></>}>
-        <p className="admin-confirm-text">{deleteConfirm.type === "user" ? `Tem certeza que deseja remover ${deleteConfirm.name} (${deleteConfirm.email})?` : `Tem certeza que deseja remover o evento "${deleteConfirm.title}" em ${deleteConfirm.location}?`}</p>
+      {deleteConfirm && <Modal title={deleteConfirm.type === "user" ? `Remover usuÃ¡rio #${deleteConfirm.id}` : `Remover evento #${deleteConfirm.id}`} actions={<><button type="button" className="danger" onClick={() => deleteConfirm.type === "user" ? removeUser(deleteConfirm.id) : removeEvent(deleteConfirm.id)} disabled={deleteBusyId != null}>{deleteBusyId ? "Removendo..." : "Sim, remover"}</button><button type="button" onClick={() => setDeleteConfirm(null)} disabled={deleteBusyId != null}>Cancelar</button></>}>
+        <p className="admin-confirm-text">{deleteConfirm.type === "user" ? `Tem certeza que deseja remover ${deleteConfirm.name} (${deleteConfirm.email})?` : `Tem certeza que deseja remover o evento "${deleteConfirm.title}" em ${deleteConfirm.location} (${deleteConfirm.cityLabel})?`}</p>
       </Modal>}
     </div>
   );
 }
 
 function TableUsers({ items, onEdit, onPassword, onSecret, onDelete, deleteBusyId }) {
-  return <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>ID</th><th>Nome</th><th>E-mail</th><th>Role</th><th>Criado em</th><th>Ações</th></tr></thead><tbody>{items.map((item) => <tr key={item.id}><td>{item.id}</td><td>{item.name}</td><td>{item.email}</td><td><span className={`admin-badge ${item.role === "ADMIN" ? "admin" : ""}`}>{item.role}</span></td><td>{formatDateTime(item.createdAt)}</td><td className="actions-cell"><button type="button" className="primary" onClick={() => onEdit(item)}>Editar</button><button type="button" onClick={() => onPassword(item.id)}>Trocar senha</button><button type="button" onClick={() => onSecret(item.id)}>Palavra secreta</button><button type="button" className="danger" disabled={deleteBusyId === `u-${item.id}`} onClick={() => onDelete(item)}>{deleteBusyId === `u-${item.id}` ? "Removendo..." : "Remover"}</button></td></tr>)}{items.length === 0 && <tr><td colSpan={6}>Nenhum usuário encontrado para os filtros atuais.</td></tr>}</tbody></table></div>;
+  return <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>ID</th><th>Nome</th><th>E-mail</th><th>Role</th><th>Criado em</th><th>AÃ§Ãµes</th></tr></thead><tbody>{items.map((item) => <tr key={item.id}><td>{item.id}</td><td>{item.name}</td><td>{item.email}</td><td><span className={`admin-badge ${item.role === "ADMIN" ? "admin" : ""}`}>{item.role}</span></td><td>{formatDateTime(item.createdAt)}</td><td className="actions-cell"><button type="button" className="primary" onClick={() => onEdit(item)}>Editar</button><button type="button" onClick={() => onPassword(item.id)}>Trocar senha</button><button type="button" onClick={() => onSecret(item.id)}>Palavra secreta</button><button type="button" className="danger" disabled={deleteBusyId === `u-${item.id}`} onClick={() => onDelete(item)}>{deleteBusyId === `u-${item.id}` ? "Removendo..." : "Remover"}</button></td></tr>)}{items.length === 0 && <tr><td colSpan={6}>Nenhum usuÃ¡rio encontrado para os filtros atuais.</td></tr>}</tbody></table></div>;
 }
 
 function TableEvents({ items, onEdit, onDelete, deleteBusyId }) {
-  return <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>ID</th><th>Título</th><th>Data/Hora</th><th>Local</th><th>Criador</th><th>Ações</th></tr></thead><tbody>{items.map((item) => <tr key={item.id}><td>{item.id}</td><td>{item.title}</td><td>{formatDateTime(item.eventDateTime)}</td><td>{item.location}</td><td>{item.createdByUserId}</td><td className="actions-cell"><button type="button" className="primary" onClick={() => onEdit(item)}>Editar</button><button type="button" className="danger" disabled={deleteBusyId === `e-${item.id}`} onClick={() => onDelete(item)}>{deleteBusyId === `e-${item.id}` ? "Removendo..." : "Remover"}</button></td></tr>)}{items.length === 0 && <tr><td colSpan={6}>Nenhum evento encontrado para os filtros atuais.</td></tr>}</tbody></table></div>;
+  return <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>ID</th><th>Título</th><th>Data/Hora</th><th>Local</th><th>Cidade</th><th>Criador</th><th>Ações</th></tr></thead><tbody>{items.map((item) => <tr key={item.id}><td>{item.id}</td><td>{item.title}</td><td>{formatDateTime(item.eventDateTime)}</td><td>{item.location}</td><td>{formatBrazilianCity(item.city, item.state)}</td><td>{item.createdByUserId}</td><td className="actions-cell"><button type="button" className="primary" onClick={() => onEdit(item)}>Editar</button><button type="button" className="danger" disabled={deleteBusyId === `e-${item.id}`} onClick={() => onDelete(item)}>{deleteBusyId === `e-${item.id}` ? "Removendo..." : "Remover"}</button></td></tr>)}{items.length === 0 && <tr><td colSpan={7}>Nenhum evento encontrado para os filtros atuais.</td></tr>}</tbody></table></div>;
 }
 
 function Modal({ title, children, actions }) {
   return <div className="admin-modal-overlay" role="dialog" aria-modal="true"><div className="admin-modal"><h3>{title}</h3>{children}<div className="admin-modal-actions">{actions}</div></div></div>;
 }
+
+
+
+

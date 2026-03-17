@@ -8,6 +8,8 @@ public record AdminEventResponse(
         String title,
         LocalDateTime eventDateTime,
         String location,
+        String city,
+        String state,
         String description,
         Long createdByUserId,
         Instant createdAt,

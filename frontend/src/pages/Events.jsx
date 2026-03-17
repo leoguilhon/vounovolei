@@ -1,10 +1,11 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { createPortal } from "react-dom";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../auth/useAuth";
 import http from "../api/http";
 import EventCard from "../components/EventCard";
 import Avatar from "../components/Avatar";
+import BrazilCityField from "../components/BrazilCityField";
 import "../styles/events.css";
 
 const PAGE_SIZE = 12;
@@ -127,6 +128,9 @@ export default function Events() {
   const [newTitle, setNewTitle] = useState("");
   const [newEventDateTime, setNewEventDateTime] = useState("");
   const [newLocation, setNewLocation] = useState("");
+  const [newCity, setNewCity] = useState("");
+  const [newState, setNewState] = useState("");
+  const [newCityError, setNewCityError] = useState("");
   const [newDescription, setNewDescription] = useState("");
 
   function openCreate() {
@@ -134,6 +138,9 @@ export default function Events() {
     setNewTitle("");
     setNewEventDateTime("");
     setNewLocation("");
+    setNewCity("");
+    setNewState("");
+    setNewCityError("");
     setNewDescription("");
     setIsCreateOpen(true);
   }
@@ -156,12 +163,21 @@ export default function Events() {
 
     setCreateBusy(true);
     setCreateError("");
+    setNewCityError("");
+
+    if (!newCity || !newState) {
+      setNewCityError("Selecione uma cidade da lista de municípios brasileiros.");
+      setCreateBusy(false);
+      return;
+    }
 
     try {
       const body = {
         title: String(newTitle ?? "").trim(),
         eventDateTime: normalizeDateTimeLocal(newEventDateTime),
         location: String(newLocation ?? "").trim(),
+        city: String(newCity ?? "").trim(),
+        state: String(newState ?? "").trim(),
         description: String(newDescription ?? "").trim() || null,
       };
 
@@ -241,7 +257,6 @@ export default function Events() {
     }
 
     loadEvents();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [logout]);
 
   // carrega /detail para pegar participantsCount
@@ -275,7 +290,9 @@ export default function Events() {
           for (const [id, detail] of results) next[id] = detail;
           return next;
         });
-      } catch {}
+      } catch {
+        return;
+      }
     }
 
     loadDetails();
@@ -376,11 +393,11 @@ export default function Events() {
     }
 
     function onEsc(e) {
-      if (e.key === "Escape") {
-        setMenuOpen(false);
-        if (isCreateOpen) closeCreate();
+        if (e.key === "Escape") {
+          setMenuOpen(false);
+          if (isCreateOpen && !createBusy) setIsCreateOpen(false);
+        }
       }
-    }
 
     document.addEventListener("mousedown", onDocClick);
     document.addEventListener("keydown", onEsc);
@@ -388,7 +405,7 @@ export default function Events() {
       document.removeEventListener("mousedown", onDocClick);
       document.removeEventListener("keydown", onEsc);
     };
-  }, [menuOpen, isCreateOpen]);
+  }, [menuOpen, isCreateOpen, createBusy]);
 
   // ===== FAB via Portal (não some por overflow/transform/paginação) =====
   const fab = createPortal(
@@ -483,6 +500,18 @@ export default function Events() {
                     placeholder="Praia do Flamengo"
                   />
                 </div>
+
+                <BrazilCityField
+                  city={newCity}
+                  state={newState}
+                  required
+                  error={newCityError}
+                  onChange={(option) => {
+                    setNewCity(option?.name ?? "");
+                    setNewState(option?.state ?? "");
+                    setNewCityError("");
+                  }}
+                />
 
                 <div className="form-field">
                   <label>Descrição (opcional)</label>

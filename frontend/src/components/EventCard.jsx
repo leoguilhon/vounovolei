@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 import "../styles/events.css";
+import { formatBrazilianCity } from "../utils/brazilianCities";
+import EventWeatherSummary from "./EventWeatherSummary";
 
 const DEFAULT_IMG = "/images/beach-volley.jpg";
 
@@ -27,6 +29,7 @@ export default function EventCard({ event, featured = false }) {
   const title = event.title ?? "Evento";
   const createdByName = event.createdByName?.trim();
   const location = event.location ?? "Local a definir";
+  const cityLabel = formatBrazilianCity(event.city, event.state);
   const { date, time } = formatDateTime(event.eventDateTime);
 
   const weekday = capitalize(getWeekdayLabel(event.eventDateTime));
@@ -53,7 +56,7 @@ export default function EventCard({ event, featured = false }) {
             }`}
             title={
               participantsCount >= 8
-                ? "Evento com inscritos suficientes ✅"
+                ? "Evento com inscritos suficientes"
                 : `${participantsCount} ${inscritosLabel}`
             }
           >
@@ -61,9 +64,7 @@ export default function EventCard({ event, featured = false }) {
           </div>
         )}
 
-        {featured && (
-          <div className="event-card-featured-tag">Destaque</div>
-        )}
+        {featured && <div className="event-card-featured-tag">Destaque</div>}
       </div>
 
       <div className="event-card-body">
@@ -82,16 +83,19 @@ export default function EventCard({ event, featured = false }) {
           </div>
         </div>
 
-        {createdByName && (
-          <div className="event-card-creator">
-            Criado por {createdByName}
-          </div>
-        )}
+        {createdByName && <div className="event-card-creator">Criado por {createdByName}</div>}
 
         <div className="event-card-row">
           <span className="event-card-icon">📍</span>
           <span className="event-card-text">{location}</span>
         </div>
+
+        <div className="event-card-row">
+          <span className="event-card-icon">🏙️</span>
+          <span className="event-card-text">{cityLabel}</span>
+        </div>
+
+        <EventWeatherSummary weather={event.weather} compact />
 
         <div className="event-card-row event-card-row--meta">
           <div className="event-card-meta-left">

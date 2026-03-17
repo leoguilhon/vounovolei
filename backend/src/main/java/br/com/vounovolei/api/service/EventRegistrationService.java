@@ -23,6 +23,7 @@ public class EventRegistrationService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final EventRegistrationRepository eventRegistrationRepository;
+    private final EventWeatherService eventWeatherService;
 
     // ✅ idempotente: se já estiver registrado, não lança erro
     // ✅ agora recebe bringBall
@@ -107,6 +108,9 @@ public class EventRegistrationService {
                 e.getTitle(),
                 e.getEventDateTime(),
                 e.getLocation(),
+                e.getCity(),
+                e.getState(),
+                eventWeatherService.resolve(e.getEventDateTime(), e.getCity(), e.getState()),
                 e.getDescription(),
                 e.getCreatedByUserId(),
                 createdByName,
