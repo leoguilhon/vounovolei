@@ -35,13 +35,14 @@ export default function EventCard({ event, featured = false }) {
   const weekday = capitalize(getWeekdayLabel(event.eventDateTime));
 
   const participantsCount = event.participantsCount ?? null;
+  const hasMoreThanEightParticipants = participantsCount !== null && participantsCount >= 8;
   const inscritosLabel = participantsCount === 1 ? "inscrito" : "inscritos";
 
   return (
     <Link
       className={`event-card ${event.isPast ? "event-card--past" : ""} ${
         featured ? "event-card--featured" : ""
-      }`}
+      } ${hasMoreThanEightParticipants ? "event-card--ready" : ""}`}
       to={`/events/${event.id}`}
     >
       <div className="event-card-media">

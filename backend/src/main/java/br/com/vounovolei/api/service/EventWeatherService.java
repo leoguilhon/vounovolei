@@ -184,7 +184,7 @@ public class EventWeatherService {
                 false,
                 eventDate,
                 "UNAVAILABLE",
-                "Previsão indisponível",
+                "Previsao indisponivel",
                 "UNAVAILABLE",
                 null,
                 null,
@@ -213,28 +213,58 @@ public class EventWeatherService {
 
     private WeatherCondition mapCondition(Integer weatherCode, Integer rainProbability, Double rainMm) {
         int code = weatherCode == null ? -1 : weatherCode;
-        double rainValue = rainMm == null ? 0.0d : rainMm;
-        int probability = rainProbability == null ? 0 : rainProbability;
 
-        if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82) || (code >= 95 && code <= 99)
-                || rainValue >= 1.0d || probability >= 40) {
+        if (isSeverePrecipitationCode(code)) {
+            return WeatherCondition.STORM;
+        }
+
+        if (isPrecipitationCode(code)) {
             return WeatherCondition.RAINY;
+        }
+
+        if (isCloudyCode(code)) {
+            return WeatherCondition.CLOUDY;
+        }
+
+        if (isPartlyCloudyCode(code)) {
+            return WeatherCondition.PARTLY_CLOUDY;
         }
 
         if (code == 0) {
             return WeatherCondition.SUNNY;
         }
 
-        if (code >= 1 && code <= 3) {
-            return WeatherCondition.CLOUDY;
-        }
+        return WeatherCondition.CLOUDY;
+    }
 
-        return probability >= 20 ? WeatherCondition.CLOUDY : WeatherCondition.SUNNY;
+    private boolean isSeverePrecipitationCode(int code) {
+        return (code >= 65 && code <= 67)
+                || code == 82
+                || code == 86
+                || (code >= 95 && code <= 99);
+    }
+
+    private boolean isPrecipitationCode(int code) {
+        return (code >= 51 && code <= 67)
+                || (code >= 71 && code <= 77)
+                || (code >= 80 && code <= 82)
+                || (code >= 85 && code <= 86)
+                || (code >= 95 && code <= 99);
+    }
+
+    private boolean isCloudyCode(int code) {
+        return code == 3 || code == 45 || code == 48;
+    }
+
+    private boolean isPartlyCloudyCode(int code) {
+        return code == 1 || code == 2;
     }
 
     private enum WeatherCondition {
         SUNNY("Ensolarado", "SUNNY"),
+        PARTLY_CLOUDY("Parcialmente nublado", "PARTLY_CLOUDY"),
         CLOUDY("Nublado", "CLOUDY"),
+        STORM("Chuva forte", "STORM"),
         RAINY("Chuvoso", "RAINY");
 
         private final String label;

@@ -1,6 +1,27 @@
 import "../styles/event-weather.css";
 
 function WeatherIcon({ icon }) {
+  if (icon === "STORM") {
+    return (
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path
+          d="M15 32c-5.52 0-10-4.48-10-10s4.48-10 10-10c1.66 0 3.23.41 4.61 1.13C22.04 8.83 26.56 6 31.75 6 39.07 6 45 11.93 45 19.25S39.07 32.5 31.75 32.5H15z"
+          fill="#bfc9d8"
+        />
+        <path
+          d="M24 24l-4 8h4l-2 8 8-11h-4l3-5z"
+          fill="#f59e0b"
+        />
+        <path
+          d="M14 37l-2 4M33 37l-2 4"
+          stroke="#2563eb"
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+
   if (icon === "RAINY") {
     return (
       <svg viewBox="0 0 48 48" aria-hidden="true">
@@ -21,10 +42,22 @@ function WeatherIcon({ icon }) {
   if (icon === "CLOUDY") {
     return (
       <svg viewBox="0 0 48 48" aria-hidden="true">
-        <circle cx="18" cy="17" r="8" fill="#ffd166" />
+        <path
+          d="M15 34c-5.52 0-10-4.48-10-10s4.48-10 10-10c1.66 0 3.23.41 4.61 1.13C22.04 10.83 26.56 8 31.75 8 39.07 8 45 13.93 45 21.25S39.07 34.5 31.75 34.5H15z"
+          fill="#c9d2df"
+        />
+      </svg>
+    );
+  }
+
+  if (icon === "PARTLY_CLOUDY") {
+    return (
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <circle cx="17" cy="16" r="8" fill="#ffd166" />
         <path
           d="M18 31c-5.52 0-10-4.48-10-10s4.48-10 10-10c1.66 0 3.23.41 4.61 1.13C25.04 7.83 29.56 5 34.75 5 42.07 5 48 10.93 48 18.25S42.07 31.5 34.75 31.5H18z"
           fill="#d7dde8"
+          opacity="0.92"
         />
       </svg>
     );
