@@ -78,7 +78,9 @@ npm run dev
 ## Configuracoes principais
 
 - O frontend usa `VITE_API_URL` como base da API.
+- O frontend pode ser configurado via `frontend/.env` a partir de `frontend/.env.example`.
 - O backend esta com CORS liberado para `http://localhost:5173`.
+- O backend pode ser configurado por variaveis de ambiente a partir de `backend/.env.example`.
 - Upload de avatar: ate 2MB (JPG/PNG/WEBP), servido em `/media/**`.
 
 ## Documentacao por modulo

@@ -23,11 +23,11 @@ Pre-requisitos:
 CREATE DATABASE vounovolei;
 ```
 
-2. Ajuste as configuracoes em `src/main/resources/application.properties` (se necessario):
-- `spring.datasource.url`
-- `spring.datasource.username`
-- `spring.datasource.password`
-- `security.jwt.secret`
+2. Configure as variaveis de ambiente com base em `backend/.env.example` (ou ajuste `src/main/resources/application.properties`, se preferir):
+- `DB_URL`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `JWT_SECRET`
 
 3. Rode a aplicacao:
 
@@ -43,14 +43,20 @@ No Windows PowerShell:
 
 A API sobe em `http://localhost:8080`.
 
-## Configuracao atual (application.properties)
+## Configuracao atual
 
-- Porta: `8080`
-- Banco: `jdbc:mysql://localhost:3306/vounovolei`
-- Access token expiration: `15` minutos
-- Refresh token expiration: `10080` minutos (7 dias)
-- Upload base dir: `uploads`
-- Upload avatar maximo: `2097152` bytes (2MB)
+- Porta: `SERVER_PORT` (padrao `8080`)
+- Banco: `DB_URL` (padrao `jdbc:mysql://localhost:3306/vounovolei`)
+- Usuario do banco: `DB_USERNAME` (padrao `root`)
+- Senha do banco: `DB_PASSWORD` (padrao `root`)
+- Chave JWT: `JWT_SECRET`
+- Access token expiration: `JWT_EXPIRATION_MINUTES` (padrao `15`)
+- Refresh token expiration: `JWT_REFRESH_EXPIRATION_MINUTES` (padrao `10080`, 7 dias)
+- Forgot password token expiration: `JWT_FORGOT_PASSWORD_EXPIRATION_MINUTES` (padrao `10`)
+- Upload base dir: `UPLOADS_BASE_DIR` (padrao `uploads`)
+- Upload avatar maximo: `UPLOADS_MAX_AVATAR_BYTES` (padrao `2097152`)
+- Multipart max file size: `MULTIPART_MAX_FILE_SIZE` (padrao `2MB`)
+- Multipart max request size: `MULTIPART_MAX_REQUEST_SIZE` (padrao `2MB`)
 - CORS permitido: `http://localhost:5173`
 
 ## Migrations (Flyway)

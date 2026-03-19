@@ -21,7 +21,7 @@ Pre-requisitos:
 npm install
 ```
 
-2. Crie o arquivo `.env` na pasta `frontend/`:
+2. Crie o arquivo `.env` na pasta `frontend/` com base em `.env.example`:
 
 ```env
 VITE_API_URL=http://localhost:8080

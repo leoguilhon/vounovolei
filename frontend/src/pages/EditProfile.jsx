@@ -67,7 +67,7 @@ export default function EditProfile() {
     return () => {
       mounted = false;
     };
-  }, [refreshMe, logout, user]);
+  }, [refreshMe, logout]);
 
   const rawName = useMemo(() => user?.name?.trim() || me?.name?.trim() || "", [user?.name, me?.name]);
   const displayName = useMemo(() => (rawName ? capitalizeFirst(rawName) : ""), [rawName]);
@@ -134,7 +134,7 @@ export default function EditProfile() {
           setName(user.name ?? "");
           setEmail(user.email ?? "");
         } else {
-          setError(e?.response?.data?.message || "Nao foi possivel carregar seus dados.");
+          setError(e?.response?.data?.message || "Não foi possível carregar seus dados.");
         }
       } finally {
         if (mounted) setLoading(false);
@@ -145,7 +145,18 @@ export default function EditProfile() {
     return () => {
       mounted = false;
     };
-  }, [refreshMe, logout, user]);
+  }, [refreshMe, logout]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    setMe((current) => ({
+      ...(current ?? {}),
+      ...user,
+    }));
+    setName(user.name ?? "");
+    setEmail(user.email ?? "");
+  }, [user]);
 
   function resetAvatarSelection() {
     setAvatarFile(null);
@@ -164,7 +175,7 @@ export default function EditProfile() {
     }
 
     if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
-      setAvatarError("Formato invalido. Use JPG, PNG ou WEBP.");
+      setAvatarError("Formato inválido. Use JPG, PNG ou WEBP.");
       resetAvatarSelection();
       return;
     }
@@ -206,7 +217,7 @@ export default function EditProfile() {
 
       setAvatarError(
         e?.response?.data?.message ||
-          "Nao foi possivel atualizar a foto. Tente novamente."
+          "Não foi possível atualizar a foto. Tente novamente."
       );
     } finally {
       setAvatarSaving(false);
@@ -233,7 +244,7 @@ export default function EditProfile() {
 
       setAvatarError(
         e?.response?.data?.message ||
-          "Nao foi possivel remover a foto. Tente novamente."
+          "Não foi possivel remover a foto. Tente novamente."
       );
     } finally {
       setAvatarRemoving(false);
@@ -241,11 +252,11 @@ export default function EditProfile() {
   }
 
   function validateProfile() {
-    if (!name.trim()) return "Nome e obrigatorio.";
-    if (!email.trim()) return "E-mail e obrigatorio.";
+    if (!name.trim()) return "Nome é obrigatorio.";
+    if (!email.trim()) return "E-mail é obrigatorio.";
 
     const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-    if (!emailOk) return "E-mail invalido.";
+    if (!emailOk) return "E-mail inválido.";
 
     return "";
   }
@@ -256,7 +267,7 @@ export default function EditProfile() {
     if (!currentPassword.trim()) return "Informe sua senha atual.";
     if (!newPassword.trim()) return "Informe a nova senha.";
     if (newPassword.trim().length < 6) return "A nova senha deve ter pelo menos 6 caracteres.";
-    if (newPassword !== confirmNewPassword) return "A confirmacao da nova senha nao confere.";
+    if (newPassword !== confirmNewPassword) return "A confirmação da nova senha não confere.";
     if (currentPassword === newPassword) return "A nova senha deve ser diferente da senha atual.";
 
     return "";
@@ -266,7 +277,7 @@ export default function EditProfile() {
     if (!newSecretWord.trim()) return "Informe a nova palavra secreta.";
     if (newSecretWord.trim().length < 4) return "A palavra secreta deve ter pelo menos 4 caracteres.";
     if (newSecretWord.trim() !== confirmNewSecretWord.trim()) {
-      return "A confirmacao da palavra secreta nao confere.";
+      return "A confirmação da palavra secreta não confere.";
     }
 
     return "";
@@ -297,7 +308,7 @@ export default function EditProfile() {
 
       setError(
         e?.response?.data?.message ||
-          "Nao foi possivel atualizar nome/e-mail. Tente novamente."
+          "Não foi possivel atualizar nome/e-mail. Tente novamente."
       );
     } finally {
       setSavingProfile(false);
@@ -339,7 +350,7 @@ export default function EditProfile() {
 
       setError(
         e?.response?.data?.message ||
-          "Nao foi possivel alterar a senha. Verifique a senha atual e tente novamente."
+          "Não foi possível alterar a senha. Verifique a senha atual e tente novamente."
       );
     } finally {
       setSavingPassword(false);
@@ -376,7 +387,7 @@ export default function EditProfile() {
 
       setError(
         e?.response?.data?.message ||
-          "Nao foi possivel alterar a palavra secreta. Tente novamente."
+          "Não foi possível alterar a palavra secreta. Tente novamente."
       );
     } finally {
       setSavingSecretWord(false);
@@ -592,7 +603,7 @@ export default function EditProfile() {
             <form className="card form" onSubmit={handleChangeSecretWord}>
               <h2 className="section-title">Palavra secreta</h2>
               <p className="section-hint">
-                A palavra secreta atual fica protegida por hash e nao pode ser exibida novamente. Voce pode definir uma nova a qualquer momento.
+                A palavra secreta atual fica protegida por hash e não pode ser exibida novamente. Você pode definir uma nova a qualquer momento.
               </p>
 
               <div className="form-grid">

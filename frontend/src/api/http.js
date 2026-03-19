@@ -1,7 +1,8 @@
 import axios from "axios";
+import { getApiBaseUrl } from "./base-url";
 
 const http = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: getApiBaseUrl(),
 });
 
 let refreshPromise = null;

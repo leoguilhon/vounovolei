@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { getApiBaseUrl } from "../api/base-url";
 import "../styles/avatar.css";
 
 const MAX_INITIALS = 2;
@@ -24,7 +25,7 @@ function resolveAvatarSrc(avatarUrl) {
     return avatarUrl;
   }
 
-  const base = import.meta.env.VITE_API_URL || "";
+  const base = getApiBaseUrl();
   if (!base) return avatarUrl;
 
   if (base.endsWith("/") && avatarUrl.startsWith("/")) {

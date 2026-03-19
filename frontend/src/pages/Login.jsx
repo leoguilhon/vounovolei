@@ -42,12 +42,15 @@ export default function Login() {
     } catch (err) {
       const backendMsg = err?.response?.data?.message || err?.response?.data?.error;
       const code = backendMsg || err?.message;
+      const status = err?.response?.status;
 
       setError(
         code === "INVALID_CREDENTIALS"
-          ? "Email ou senha inválidos. Verifique e tente novamente."
+          ? "Email ou senha invalidos. Verifique e tente novamente."
           : code === "TOKEN_NAO_RETORNADO"
-          ? "Login ok, mas o backend não retornou o token."
+          ? "Login concluido, mas o backend nao retornou o token."
+          : !status
+          ? "Nao foi possivel conectar ao backend. Verifique se a API esta rodando em http://localhost:8080 ou configure VITE_API_URL."
           : backendMsg || "Falha no login. Verifique suas credenciais."
       );
     } finally {
@@ -59,7 +62,7 @@ export default function Login() {
     <div className="auth-page">
       <form className="auth-card" onSubmit={onSubmit}>
         <div className="auth-brand">
-          <img className="auth-brand-logo" src="/images/logo-nobg.png" alt="Vou No Vôlei" />
+          <img className="auth-brand-logo" src="/images/logo-nobg.png" alt="Vou No Volei" />
         </div>
         <h1 className="auth-title">Entrar</h1>
 
@@ -100,7 +103,7 @@ export default function Login() {
           </button>
 
           <p className="auth-footer">
-            Não tem conta? <Link to="/register">Criar agora</Link>
+            Nao tem conta? <Link to="/register">Criar agora</Link>
           </p>
         </div>
       </form>
