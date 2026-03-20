@@ -9,6 +9,7 @@ import br.com.vounovolei.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -22,12 +23,13 @@ public class EventService {
     private final RateLimitService rateLimitService;
     private final EventWeatherService eventWeatherService;
 
+    @Transactional
     public EventResponse create(CreateEventRequest req, Long createdByUserId, boolean isAdmin) {
         if (!isAdmin) {
             rateLimitService.checkCreateEventLimit(createdByUserId);
         }
 
-        Event e = Event.builder()
+        Event event = Event.builder()
                 .title(req.title().trim())
                 .eventDateTime(req.eventDateTime())
                 .location(req.location().trim())
@@ -39,10 +41,12 @@ public class EventService {
                 .updatedAt(Instant.now())
                 .build();
 
-        Event saved = eventRepository.save(e);
+        Event saved = eventRepository.save(event);
+        eventWeatherService.refreshWeatherForEvent(saved);
         return toResponse(saved);
     }
 
+    @Transactional(readOnly = true)
     public List<EventResponse> list() {
         return eventRepository.findAll()
                 .stream()
@@ -50,67 +54,82 @@ public class EventService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public EventResponse detail(Long id) {
-        Event e = eventRepository.findById(id)
+        Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("EVENT_NOT_FOUND"));
-        return toResponse(e);
+        return toResponse(event);
     }
 
-    // ✅ admin OU criador podem editar
+    @Transactional
     public EventResponse update(Long id, UpdateEventRequest req, Long userId, boolean isAdmin) {
-        Event e = eventRepository.findById(id)
+        Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("EVENT_NOT_FOUND"));
 
-        boolean isOwner = e.getCreatedByUserId() != null && e.getCreatedByUserId().equals(userId);
-
+        boolean isOwner = event.getCreatedByUserId() != null && event.getCreatedByUserId().equals(userId);
         if (!isAdmin && !isOwner) {
             throw new AccessDeniedException("FORBIDDEN");
         }
 
-        e.setTitle(req.title().trim());
-        e.setEventDateTime(req.eventDateTime());
-        e.setLocation(req.location().trim());
-        e.setCity(req.city().trim());
-        e.setState(req.state().trim().toUpperCase());
-        e.setDescription(req.description());
-        e.setUpdatedAt(Instant.now());
+        boolean weatherRelevantChange = isWeatherRelevantChange(event, req);
 
-        Event saved = eventRepository.save(e);
+        event.setTitle(req.title().trim());
+        event.setEventDateTime(req.eventDateTime());
+        event.setLocation(req.location().trim());
+        event.setCity(req.city().trim());
+        event.setState(req.state().trim().toUpperCase());
+        event.setDescription(req.description());
+        event.setUpdatedAt(Instant.now());
+
+        Event saved = eventRepository.save(event);
+        if (weatherRelevantChange) {
+            eventWeatherService.refreshWeatherForEvent(saved);
+        }
         return toResponse(saved);
     }
 
-    // ✅ admin OU criador podem excluir
     public void delete(Long id, Long userId, boolean isAdmin) {
-        Event e = eventRepository.findById(id)
+        Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("EVENT_NOT_FOUND"));
 
-        boolean isOwner = e.getCreatedByUserId() != null && e.getCreatedByUserId().equals(userId);
-
+        boolean isOwner = event.getCreatedByUserId() != null && event.getCreatedByUserId().equals(userId);
         if (!isAdmin && !isOwner) {
             throw new AccessDeniedException("FORBIDDEN");
         }
 
-        eventRepository.delete(e);
+        eventRepository.delete(event);
     }
 
-    private EventResponse toResponse(Event e) {
-        String createdByName = e.getCreatedByUserId() == null
+    private EventResponse toResponse(Event event) {
+        String createdByName = event.getCreatedByUserId() == null
                 ? null
-                : userRepository.findById(e.getCreatedByUserId())
+                : userRepository.findById(event.getCreatedByUserId())
                         .map(user -> user.getName())
                         .orElse(null);
 
         return new EventResponse(
-                e.getId(),
-                e.getTitle(),
-                e.getEventDateTime(),
-                e.getLocation(),
-                e.getCity(),
-                e.getState(),
-                eventWeatherService.resolve(e.getEventDateTime(), e.getCity(), e.getState()),
-                e.getDescription(),
-                e.getCreatedByUserId(),
+                event.getId(),
+                event.getTitle(),
+                event.getEventDateTime(),
+                event.getLocation(),
+                event.getCity(),
+                event.getState(),
+                eventWeatherService.fromStoredWeather(event),
+                event.getDescription(),
+                event.getCreatedByUserId(),
                 createdByName
         );
+    }
+
+    private boolean isWeatherRelevantChange(Event event, UpdateEventRequest req) {
+        return !normalize(event.getCity()).equals(normalize(req.city()))
+                || !normalize(event.getState()).equals(normalize(req.state()).toUpperCase())
+                || (event.getEventDateTime() == null
+                ? req.eventDateTime() != null
+                : !event.getEventDateTime().equals(req.eventDateTime()));
+    }
+
+    private String normalize(String value) {
+        return value == null ? "" : value.trim();
     }
 }

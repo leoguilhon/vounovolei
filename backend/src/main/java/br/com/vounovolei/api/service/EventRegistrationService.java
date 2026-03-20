@@ -25,8 +25,6 @@ public class EventRegistrationService {
     private final EventRegistrationRepository eventRegistrationRepository;
     private final EventWeatherService eventWeatherService;
 
-    // ✅ idempotente: se já estiver registrado, não lança erro
-    // ✅ agora recebe bringBall
     public void register(Long eventId, Long userId, Boolean bringBall) {
         if (!eventRepository.existsById(eventId)) {
             throw new IllegalArgumentException("EVENT_NOT_FOUND");
@@ -48,7 +46,6 @@ public class EventRegistrationService {
         eventRegistrationRepository.save(reg);
     }
 
-    // ✅ idempotente: se não estiver registrado, não lança erro
     public void unregister(Long eventId, Long userId) {
         if (!eventRepository.existsById(eventId)) {
             throw new IllegalArgumentException("EVENT_NOT_FOUND");
@@ -69,7 +66,6 @@ public class EventRegistrationService {
         List<User> users = userRepository.findAllById(userIds);
         Map<Long, User> usersById = users.stream().collect(Collectors.toMap(User::getId, u -> u));
 
-        // Map userId -> bringBall
         Map<Long, Boolean> bringBallByUserId = regs.stream()
                 .collect(Collectors.toMap(
                         EventRegistration::getUserId,
@@ -91,12 +87,12 @@ public class EventRegistrationService {
     }
 
     public EventDetailResponse detailWithParticipants(Long eventId) {
-        Event e = eventRepository.findById(eventId)
+        Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new IllegalArgumentException("EVENT_NOT_FOUND"));
 
-        String createdByName = e.getCreatedByUserId() == null
+        String createdByName = event.getCreatedByUserId() == null
                 ? null
-                : userRepository.findById(e.getCreatedByUserId())
+                : userRepository.findById(event.getCreatedByUserId())
                         .map(User::getName)
                         .orElse(null);
 
@@ -104,15 +100,15 @@ public class EventRegistrationService {
         long count = participants.size();
 
         return new EventDetailResponse(
-                e.getId(),
-                e.getTitle(),
-                e.getEventDateTime(),
-                e.getLocation(),
-                e.getCity(),
-                e.getState(),
-                eventWeatherService.resolve(e.getEventDateTime(), e.getCity(), e.getState()),
-                e.getDescription(),
-                e.getCreatedByUserId(),
+                event.getId(),
+                event.getTitle(),
+                event.getEventDateTime(),
+                event.getLocation(),
+                event.getCity(),
+                event.getState(),
+                eventWeatherService.fromStoredWeather(event),
+                event.getDescription(),
+                event.getCreatedByUserId(),
                 createdByName,
                 count,
                 participants

@@ -1,15 +1,22 @@
 package br.com.vounovolei.api.service;
 
 import br.com.vounovolei.api.controller.event.dto.EventWeatherResponse;
+import br.com.vounovolei.api.domain.event.Event;
+import br.com.vounovolei.api.repository.EventRepository;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
 import java.text.Normalizer;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -17,11 +24,14 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
+@Slf4j
+@RequiredArgsConstructor
 public class EventWeatherService {
+
+    static final ZoneId WEATHER_ZONE = ZoneId.of("America/Sao_Paulo");
 
     private static final String GEOCODING_BASE_URL = "https://geocoding-api.open-meteo.com/v1";
     private static final String FORECAST_BASE_URL = "https://api.open-meteo.com/v1";
-    private static final long FORECAST_TTL_MINUTES = 30;
     private static final int MAX_FORECAST_DAYS = 16;
 
     private static final Map<String, String> STATE_NAMES_BY_UF = Map.ofEntries(
@@ -54,6 +64,8 @@ public class EventWeatherService {
             Map.entry("TO", "Tocantins")
     );
 
+    private final EventRepository eventRepository;
+
     private final RestClient geocodingClient = RestClient.builder()
             .baseUrl(GEOCODING_BASE_URL)
             .build();
@@ -63,15 +75,68 @@ public class EventWeatherService {
             .build();
 
     private final Map<String, GeoLocation> geoCache = new ConcurrentHashMap<>();
-    private final Map<String, CachedForecast> forecastCache = new ConcurrentHashMap<>();
 
-    public EventWeatherResponse resolve(LocalDateTime eventDateTime, String city, String state) {
+    @Transactional
+    public void refreshWeatherForEvent(Event event) {
+        applyWeather(event, fetchWeather(event.getEventDateTime(), event.getCity(), event.getState()));
+        eventRepository.save(event);
+    }
+
+    @Transactional
+    public void refreshWeatherForUpcomingEvents() {
+        LocalDate today = LocalDate.now(WEATHER_ZONE);
+        List<Event> events = eventRepository.findByEventDateTimeGreaterThanEqualOrderByEventDateTimeAsc(today.atStartOfDay());
+        if (events.isEmpty()) {
+            return;
+        }
+
+        Map<WeatherLookupKey, EventWeatherResponse> weatherByKey = new HashMap<>();
+        List<Event> changedEvents = new ArrayList<>();
+
+        for (Event event : events) {
+            WeatherLookupKey key = WeatherLookupKey.from(event);
+            EventWeatherResponse weather = weatherByKey.computeIfAbsent(
+                    key,
+                    ignored -> fetchWeather(event.getEventDateTime(), event.getCity(), event.getState())
+            );
+            applyWeather(event, weather);
+            changedEvents.add(event);
+        }
+
+        eventRepository.saveAll(changedEvents);
+    }
+
+    @Transactional(readOnly = true)
+    public EventWeatherResponse fromStoredWeather(Event event) {
+        if (event == null) {
+            return unavailable(null);
+        }
+        if (event.getWeatherAvailable() == null
+                && event.getWeatherForecastDate() == null
+                && event.getWeatherCondition() == null
+                && event.getWeatherLastUpdatedAt() == null) {
+            return unavailable(event.getEventDateTime() == null ? null : event.getEventDateTime().toLocalDate());
+        }
+
+        return new EventWeatherResponse(
+                Boolean.TRUE.equals(event.getWeatherAvailable()),
+                event.getWeatherForecastDate(),
+                defaultString(event.getWeatherCondition(), "UNAVAILABLE"),
+                defaultString(event.getWeatherConditionLabel(), "Previsao indisponivel"),
+                defaultString(event.getWeatherIcon(), "UNAVAILABLE"),
+                event.getWeatherRainProbability(),
+                event.getWeatherExpectedRainMm(),
+                event.getWeatherLastUpdatedAt()
+        );
+    }
+
+    private EventWeatherResponse fetchWeather(java.time.LocalDateTime eventDateTime, String city, String state) {
         if (eventDateTime == null || isBlank(city) || isBlank(state)) {
             return unavailable(eventDateTime == null ? null : eventDateTime.toLocalDate());
         }
 
         LocalDate eventDate = eventDateTime.toLocalDate();
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(WEATHER_ZONE);
         long daysAhead = ChronoUnit.DAYS.between(today, eventDate);
 
         if (daysAhead < 0 || daysAhead >= MAX_FORECAST_DAYS) {
@@ -83,19 +148,14 @@ public class EventWeatherService {
             if (geoLocation == null) {
                 return unavailable(eventDate);
             }
-            return resolveForecast(eventDate, geoLocation, city, state);
+            return resolveForecast(eventDate, geoLocation);
         } catch (RuntimeException ex) {
+            log.warn("Failed to refresh weather for city={} state={} date={}", city, state, eventDate, ex);
             return unavailable(eventDate);
         }
     }
 
-    private EventWeatherResponse resolveForecast(LocalDate eventDate, GeoLocation geoLocation, String city, String state) {
-        String cacheKey = normalize(city) + "|" + normalize(state) + "|" + eventDate;
-        CachedForecast cached = forecastCache.get(cacheKey);
-        if (cached != null && cached.isFresh()) {
-            return cached.response();
-        }
-
+    private EventWeatherResponse resolveForecast(LocalDate eventDate, GeoLocation geoLocation) {
         ForecastApiResponse response = forecastClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/forecast")
@@ -121,9 +181,9 @@ public class EventWeatherService {
         Integer weatherCode = valueAt(response.daily().weatherCode(), index);
         Integer rainProbability = valueAt(response.daily().precipitationProbabilityMax(), index);
         Double rainMm = valueAt(response.daily().precipitationSum(), index);
-        WeatherCondition weatherCondition = mapCondition(weatherCode, rainProbability, rainMm);
+        WeatherCondition weatherCondition = mapCondition(weatherCode);
 
-        EventWeatherResponse weather = new EventWeatherResponse(
+        return new EventWeatherResponse(
                 true,
                 eventDate,
                 weatherCondition.name(),
@@ -133,9 +193,6 @@ public class EventWeatherService {
                 rainMm,
                 Instant.now()
         );
-
-        forecastCache.put(cacheKey, new CachedForecast(weather, Instant.now()));
-        return weather;
     }
 
     private GeoLocation resolveGeoLocation(String city, String state) {
@@ -179,6 +236,17 @@ public class EventWeatherService {
         return geoLocation;
     }
 
+    private void applyWeather(Event event, EventWeatherResponse weather) {
+        event.setWeatherAvailable(weather.available());
+        event.setWeatherForecastDate(weather.forecastDate());
+        event.setWeatherCondition(weather.condition());
+        event.setWeatherConditionLabel(weather.conditionLabel());
+        event.setWeatherIcon(weather.icon());
+        event.setWeatherRainProbability(weather.rainProbability());
+        event.setWeatherExpectedRainMm(weather.expectedRainMm());
+        event.setWeatherLastUpdatedAt(weather.weatherLastUpdatedAt());
+    }
+
     private EventWeatherResponse unavailable(LocalDate eventDate) {
         return new EventWeatherResponse(
                 false,
@@ -190,6 +258,10 @@ public class EventWeatherService {
                 null,
                 null
         );
+    }
+
+    private String defaultString(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value;
     }
 
     private String normalize(String value) {
@@ -211,7 +283,7 @@ public class EventWeatherService {
         return values.get(index);
     }
 
-    private WeatherCondition mapCondition(Integer weatherCode, Integer rainProbability, Double rainMm) {
+    private WeatherCondition mapCondition(Integer weatherCode) {
         int code = weatherCode == null ? -1 : weatherCode;
 
         if (isSeverePrecipitationCode(code)) {
@@ -286,12 +358,6 @@ public class EventWeatherService {
 
     private record GeoLocation(double latitude, double longitude) {}
 
-    private record CachedForecast(EventWeatherResponse response, Instant fetchedAt) {
-        boolean isFresh() {
-            return fetchedAt.plus(FORECAST_TTL_MINUTES, ChronoUnit.MINUTES).isAfter(Instant.now());
-        }
-    }
-
     private record GeocodingApiResponse(List<GeocodingResult> results) {}
 
     private record GeocodingResult(
@@ -310,4 +376,22 @@ public class EventWeatherService {
             @JsonProperty("precipitation_probability_max") List<Integer> precipitationProbabilityMax,
             @JsonProperty("precipitation_sum") List<Double> precipitationSum
     ) {}
+
+    private record WeatherLookupKey(String city, String state, LocalDate eventDate) {
+        static WeatherLookupKey from(Event event) {
+            return new WeatherLookupKey(
+                    normalizeStatic(event.getCity()),
+                    normalizeStatic(event.getState()),
+                    event.getEventDateTime() == null ? null : event.getEventDateTime().toLocalDate()
+            );
+        }
+
+        private static String normalizeStatic(String value) {
+            if (value == null) return "";
+            return Normalizer.normalize(value, Normalizer.Form.NFD)
+                    .replaceAll("\\p{M}+", "")
+                    .toLowerCase(Locale.ROOT)
+                    .trim();
+        }
+    }
 }

@@ -32,6 +32,7 @@ public class AdminService {
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EventWeatherService eventWeatherService;
 
     @Transactional(readOnly = true)
     public List<AdminUserResponse> listUsers(String q) {
@@ -173,6 +174,8 @@ public class AdminService {
             throw new ResponseStatusException(BAD_REQUEST, "Usuário criador não encontrado");
         }
 
+        boolean weatherRelevantChange = isWeatherRelevantChange(event, req);
+
         event.setTitle(req.title().trim());
         event.setEventDateTime(req.eventDateTime());
         event.setLocation(req.location().trim());
@@ -182,7 +185,11 @@ public class AdminService {
         event.setCreatedByUserId(req.createdByUserId());
         event.setUpdatedAt(Instant.now());
 
-        return toEventResponse(eventRepository.save(event));
+        Event saved = eventRepository.save(event);
+        if (weatherRelevantChange) {
+            eventWeatherService.refreshWeatherForEvent(saved);
+        }
+        return toEventResponse(saved);
     }
 
     @Transactional
@@ -245,6 +252,18 @@ public class AdminService {
         if (value == null) return null;
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private boolean isWeatherRelevantChange(Event event, AdminUpdateEventRequest req) {
+        return !normalize(event.getCity()).equals(normalize(req.city()))
+                || !normalize(event.getState()).equals(normalize(req.state()).toUpperCase())
+                || (event.getEventDateTime() == null
+                ? req.eventDateTime() != null
+                : !event.getEventDateTime().equals(req.eventDateTime()));
+    }
+
+    private String normalize(String value) {
+        return value == null ? "" : value.trim();
     }
 
     private String encodeValidatedPassword(String rawPassword) {
